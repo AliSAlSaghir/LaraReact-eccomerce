@@ -4,15 +4,70 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Http\Resources\ProductResource;
+use App\Models\Color;
 use App\Models\Product;
+use App\Models\Size;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
 class ProductController extends Controller {
   // Display a listing of the products
-  public function index() {
-    return response()->json(Product::with(['colors', 'sizes'])->latest()->get());
+  public function index(Request $request) {
+    // Get query parameters
+    $name = $request->query('name');
+    $categoryId = $request->query('category_id');
+    $brandId = $request->query('brand_id');
+    $colorNames = $request->query('colors');
+    $sizeNames = $request->query('sizes');
+    $priceRange = $request->query('price');
+
+    // Build query
+    $query = Product::with(['colors', 'sizes'])->latest();
+
+    // Apply filters
+    if ($name) {
+      $query->where('name', 'like', '%' . $name . '%');
+    }
+    if ($categoryId) {
+      $query->where('category_id', $categoryId);
+    }
+    if ($brandId) {
+      $query->where('brand_id', $brandId);
+    }
+    if ($colorNames) {
+      $colorsArray = explode(',', $colorNames);
+      $query->whereHas('colors', function ($q) use ($colorsArray) {
+        $q->whereIn('name', $colorsArray);
+      });
+    }
+    if ($sizeNames) {
+      $sizesArray = explode(',', $sizeNames);
+      $query->whereHas('sizes', function ($q) use ($sizesArray) {
+        $q->whereIn('name', $sizesArray);
+      });
+    }
+    if ($priceRange) {
+      // Split the price range into min and max values
+      $priceParts = explode('-', $priceRange);
+      if (count($priceParts) == 2) {
+        $minPrice = (float)$priceParts[0];
+        $maxPrice = (float)$priceParts[1];
+        $query->whereBetween('price', [$minPrice, $maxPrice]);
+      }
+    }
+
+    // Paginate results
+    $products = $query->paginate(10);
+
+    return ProductResource::collection($products)
+      ->additional([
+        'colors' => Color::has('products')->get()->map(fn($color) => $color->name),
+        'sizes' => Size::has('products')->get()->map(fn($size) => $size->name),
+      ]);
   }
+
+
 
 
   // Store a newly created product in storage
@@ -43,10 +98,8 @@ class ProductController extends Controller {
 
   // Display the specified product
   public function show(Product $product) {
-    // Eager load the related colors and sizes
-    $product = $product->load(['colors', 'sizes']);
-
-    return response()->json($product);
+    return ProductResource::make($product->load(['colors', 'sizes']));
+    // return ProductResource::make($product->load(['colors', 'sizes', 'reviews']));
   }
 
 

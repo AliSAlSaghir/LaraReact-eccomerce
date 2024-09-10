@@ -19,11 +19,7 @@ class UpdateProductRequest extends FormRequest {
    */
   public function rules(): array {
     return [
-<<<<<<< HEAD
       'name' => 'nullable|string|max:255|unique:products,name,' . $this->product->id,
-=======
-      'name' => 'nullable|string|max:255',
->>>>>>> 2328c917c133b47c2b57dfc5fe20b6e2ac74a72c
       'description' => 'nullable|string',
       'brand_id' => 'nullable|exists:brands,id',
       'category_id' => 'nullable|exists:categories,id',
