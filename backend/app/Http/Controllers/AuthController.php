@@ -76,14 +76,14 @@ class AuthController extends Controller {
     // Create a cookie to store the JWT token
     $cookie = cookie(
       'jwt',  // Name of the cookie
-      $token,          // The token value
-      JWTAuth::factory()->getTTL() * 60, // Expiration time in minutes (as per the JWT TTL)
-      '/',             // Path
-      null,            // Domain (null for default)
-      true,            // Secure (true for HTTPS, false for HTTP; ensure HTTPS in production)
-      true,            // HTTP Only
-      false,           // Raw (not encoded)
-      'Strict'         // SameSite (Strict for CSRF protection)
+      $token,  // The token value
+      JWTAuth::factory()->getTTL(), // Expiration time in minutes (as per the JWT TTL)
+      '/',  // Path
+      null,  // Domain (null for default)
+      true,  // Secure (true for HTTPS, false for HTTP; ensure HTTPS in production)
+      true,  // HTTP Only
+      false,  // Raw (not encoded)
+      'Strict'  // SameSite (Strict for CSRF protection)
     );
 
     // Return the user as JSON and set the token as a cookie

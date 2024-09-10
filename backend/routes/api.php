@@ -17,3 +17,6 @@ Route::middleware(['cookie.auth'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
   });
 });
+
+Route::middleware(['cookie.auth', 'role:admin'])->group(function () {
+});
