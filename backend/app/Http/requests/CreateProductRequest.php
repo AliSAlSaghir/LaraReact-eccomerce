@@ -19,7 +19,11 @@ class CreateProductRequest extends FormRequest {
    */
   public function rules(): array {
     return [
+<<<<<<< HEAD
       'name' => 'required|string|max:255|unique:products,name',
+=======
+      'name' => 'required|string|max:255',
+>>>>>>> 2328c917c133b47c2b57dfc5fe20b6e2ac74a72c
       'description' => 'required|string',
       'brand_id' => 'required|exists:brands,id',
       'category_id' => 'required|exists:categories,id',
