@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ColorController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SizeController;
@@ -29,5 +30,6 @@ Route::middleware(['cookie.auth', 'role:admin'])->group(function () {
     Route::apiResource('colors', ColorController::class);
     Route::apiResource('sizes', SizeController::class);
     Route::apiResource('products', ProductController::class)->except(['index', 'show']);
+    Route::apiResource('categories', CategoryController::class);
   });
 });
