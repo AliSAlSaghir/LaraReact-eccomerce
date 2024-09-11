@@ -23,6 +23,9 @@ class ProductResource extends JsonResource {
       'price' => $this->price,
       'total_qty' => $this->total_qty,
       'total_sold' => $this->total_sold,
+      'qty_left' => $this->qtyLeft,
+      'total_reviews' => $this->totalReviews,
+      'average_rating' => $this->averageRating,
       'colors' => $this->colors->map(fn($color) => $color->name),
       'sizes' => $this->sizes->map(fn($size) => $size->name),
     ];

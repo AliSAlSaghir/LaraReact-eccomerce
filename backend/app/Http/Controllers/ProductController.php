@@ -23,7 +23,7 @@ class ProductController extends Controller {
     $priceRange = $request->query('price');
 
     // Build query
-    $query = Product::with(['colors', 'sizes'])->latest();
+    $query = Product::with(['colors', 'sizes', 'reviews'])->latest();
 
     // Apply filters
     if ($name) {
@@ -98,8 +98,7 @@ class ProductController extends Controller {
 
   // Display the specified product
   public function show(Product $product) {
-    return ProductResource::make($product->load(['colors', 'sizes']));
-    // return ProductResource::make($product->load(['colors', 'sizes', 'reviews']));
+    return ProductResource::make($product->load(['colors', 'sizes', 'reviews']));
   }
 
 

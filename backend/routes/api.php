@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ColorController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SizeController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,12 +19,16 @@ Route::middleware(['custom.guest'])->group(function () {
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/{product}', [ProductController::class, 'show']);
 
+Route::get('products/{product}/reviews', [ReviewController::class, 'index']);
+Route::get('products/{product}/reviews/{review}', [ReviewController::class, 'show']);
+
 Route::middleware(['cookie.auth'])->group(function () {
   Route::group(['prefix' => 'auth'], function ($router) {
     Route::post('refresh', [AuthController::class, 'refresh']);
     Route::post('me', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
   });
+  Route::apiResource('products.reviews', ReviewController::class)->except(['index', 'show']);
 });
 
 Route::middleware(['cookie.auth', 'role:admin'])->group(function () {
@@ -31,5 +37,6 @@ Route::middleware(['cookie.auth', 'role:admin'])->group(function () {
     Route::apiResource('sizes', SizeController::class);
     Route::apiResource('products', ProductController::class)->except(['index', 'show']);
     Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('brands', BrandController::class);
   });
 });
