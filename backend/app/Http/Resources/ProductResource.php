@@ -28,6 +28,13 @@ class ProductResource extends JsonResource {
       'average_rating' => $this->averageRating,
       'colors' => $this->colors->map(fn($color) => $color->name),
       'sizes' => $this->sizes->map(fn($size) => $size->name),
+      'reviews' => $this->reviews->map(fn($review) => [
+        'id' => $review->id,
+        'user_id' => $review->user_id,
+        'comment' => $review->comment,
+        'rating' => $review->rating,
+        'created_at' => $review->created_at,
+      ])
     ];
   }
 }

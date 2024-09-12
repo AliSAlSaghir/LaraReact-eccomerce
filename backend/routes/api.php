@@ -4,11 +4,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ColorController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ShippingAddressController;
 use App\Http\Controllers\SizeController;
-use App\Models\ShippingAddress;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['custom.guest'])->group(function () {
@@ -34,6 +34,7 @@ Route::middleware(['cookie.auth'])->group(function () {
   Route::post('createShippingAddress', [ShippingAddressController::class, 'store']);
   Route::put('updateShippingAddress', [ShippingAddressController::class, 'update']);
   Route::delete('deleteShippingAddress', [ShippingAddressController::class, 'destroy']);
+  Route::apiResource('users.orders', OrderController::class);
 });
 
 Route::middleware(['cookie.auth', 'role:admin'])->group(function () {

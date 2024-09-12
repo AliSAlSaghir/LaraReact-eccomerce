@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ShippingAddress;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -13,10 +14,7 @@ return new class extends Migration {
     Schema::create('orders', function (Blueprint $table) {
       $table->id();
       $table->foreignIdFor(User::class)->cascadeOnDelete();
-      $table->foreignId('shipping_address_id')
-        ->nullable()
-        ->constrained('shipping_addresses')
-        ->onDelete('set null');
+      $table->foreignIdFor(ShippingAddress::class)->cascadeOnDelete();
       $table->string('order_number')->unique();
       $table->string('payment_status')->default('Not paid');
       $table->string('payment_method')->default('Not specified');

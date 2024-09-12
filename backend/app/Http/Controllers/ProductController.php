@@ -147,6 +147,9 @@ class ProductController extends Controller {
     foreach ($product->images as $image) {
       File::delete(storage_path('app/public/' . $image));
     }
+
+    $product->colors()->detach();
+    $product->sizes()->detach();
     $product->delete();
 
     return response()->noContent();
