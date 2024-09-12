@@ -64,8 +64,8 @@ class ReviewController extends Controller {
    */
   public function update(Request $request, Product $product, Review $review) {
     $request->validate([
-      'message' => 'nullable|string',
-      'rating' => 'nullable|integer|between:1,5',
+      'message' => 'string',
+      'rating' => 'integer|between:1,5',
     ]);
 
     $result = $this->checkIfReviewBelongToProduct($review, $product);

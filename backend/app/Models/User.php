@@ -20,6 +20,7 @@ class User extends Authenticatable implements JWTSubject {
     'name',
     'email',
     'password',
+    'shipping_address_id',
   ];
 
   /**
@@ -68,5 +69,9 @@ class User extends Authenticatable implements JWTSubject {
 
   public function reviews() {
     return $this->hasMany(Review::class);
+  }
+
+  public function shippingAddress() {
+    return $this->hasOne(ShippingAddress::class, 'id', 'shipping_address_id');
   }
 }

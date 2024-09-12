@@ -55,7 +55,6 @@ class BrandController extends Controller {
   public function update(Request $request, Brand $brand) {
     $request->validate([
       'name' => [
-        'nullable',
         'string',
         'max:255',
         Rule::unique('categories', 'name')->ignore($brand->id),

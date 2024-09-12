@@ -34,7 +34,9 @@ class AuthController extends Controller {
 
 
   public function me() {
-    return response()->json(auth('api')->user());
+    $user = User::findOrFail(auth('api')->id());
+    $user->load('shippingAddress');
+    return response()->json($user);
   }
 
 
@@ -87,7 +89,9 @@ class AuthController extends Controller {
     );
 
     // Return the user as JSON and set the token as a cookie
-    return response()->json(auth('api')->user())
+    $user = User::findOrFail(auth('api')->id());
+    $user->load('shippingAddress');
+    return response()->json($user)
       ->withCookie($cookie);
   }
 }

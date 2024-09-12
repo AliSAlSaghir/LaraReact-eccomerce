@@ -55,7 +55,6 @@ class CategoryController extends Controller {
   public function update(Request $request, Category $category) {
     $request->validate([
       'name' => [
-        'nullable',
         'string',
         'max:255',
         Rule::unique('categories', 'name')->ignore($category->id),

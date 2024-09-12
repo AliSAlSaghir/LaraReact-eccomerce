@@ -16,16 +16,10 @@ return new class extends Migration {
       $table->timestamp('email_verified_at')->nullable();
       $table->string('role')->default('customer');
       $table->string('password');
-      $table->boolean('hasShippingAddress')->default(false);
-      // Shipping Address fields
-      $table->string('shipping_first_name')->nullable();
-      $table->string('shipping_last_name')->nullable();
-      $table->string('shipping_address')->nullable();
-      $table->string('shipping_city')->nullable();
-      $table->string('shipping_postal_code')->nullable();
-      $table->string('shipping_province')->nullable();
-      $table->string('shipping_country')->nullable();
-      $table->string('shipping_phone')->nullable();
+      $table->foreignId('shipping_address_id')
+        ->nullable()
+        ->constrained('shipping_addresses')
+        ->onDelete('set null');
       $table->rememberToken();
       $table->timestamps();
     });

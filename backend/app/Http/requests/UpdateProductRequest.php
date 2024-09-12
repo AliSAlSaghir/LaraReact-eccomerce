@@ -19,19 +19,19 @@ class UpdateProductRequest extends FormRequest {
    */
   public function rules(): array {
     return [
-      'name' => 'nullable|string|max:255|unique:products,name,' . $this->product->id,
-      'description' => 'nullable|string',
-      'brand_id' => 'nullable|exists:brands,id',
-      'category_id' => 'nullable|exists:categories,id',
-      'color_id' => 'nullable|array',
+      'name' => 'string|max:255|unique:products,name,' . $this->product->id,
+      'description' => 'string',
+      'brand_id' => 'exists:brands,id',
+      'category_id' => 'exists:categories,id',
+      'color_id' => 'array',
       'color_id.*' => 'exists:colors,id',
-      'size_id' => 'nullable|array',
+      'size_id' => 'array',
       'size_id.*' => 'exists:sizes,id',
-      'images' => 'nullable|array',
+      'images' => 'array',
       'images.*' => 'file|mimes:jpeg,png,jpg,gif|max:2048',
-      'price' => 'nullable|numeric',
-      'total_qty' => 'nullable|integer',
-      'total_sold' => 'nullable|integer',
+      'price' => 'numeric',
+      'total_qty' => 'integer',
+      'total_sold' => 'integer',
     ];
   }
 }

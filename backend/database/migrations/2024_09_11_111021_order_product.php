@@ -1,10 +1,9 @@
 <?php
 
+use App\Models\Order;
 use App\Models\Product;
-use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
@@ -12,12 +11,12 @@ return new class extends Migration {
    * Run the migrations.
    */
   public function up(): void {
-    Schema::create('reviews', function (Blueprint $table) {
+    Schema::create('order_product', function (Blueprint $table) {
       $table->id();
-      $table->foreignIdFor(User::class)->cascadeOnDelete();
+      $table->foreignIdFor(Order::class)->cascadeOnDelete();
       $table->foreignIdFor(Product::class)->cascadeOnDelete();
-      $table->text('message');
-      $table->integer('rating')->unsigned();
+      $table->integer('quantity')->default(1);
+      $table->decimal('price', 8, 2);
       $table->timestamps();
     });
   }
@@ -26,6 +25,6 @@ return new class extends Migration {
    * Reverse the migrations.
    */
   public function down(): void {
-    Schema::dropIfExists('reviews');
+    //
   }
 };
