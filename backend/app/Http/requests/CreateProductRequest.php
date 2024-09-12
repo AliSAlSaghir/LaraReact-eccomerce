@@ -31,7 +31,7 @@ class CreateProductRequest extends FormRequest {
       'images.*' => 'file|mimes:jpeg,png,jpg,gif|max:2048',
       'price' => 'required|numeric',
       'total_qty' => 'required|integer',
-      'total_sold' => 'nullable|integer',
+      'total_sold' => 'integer',
     ];
   }
 }
