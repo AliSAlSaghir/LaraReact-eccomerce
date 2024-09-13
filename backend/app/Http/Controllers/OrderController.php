@@ -7,8 +7,8 @@ use App\Http\Requests\UpdateOrderRequest;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Request;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
@@ -17,35 +17,28 @@ use Throwable;
 class OrderController extends Controller {
 
   // Get all orders for a specific user
-  public function index(User $user) {
-    if (auth('api')->user()->id !== $user->id) {
-      return response()->json(['message' => 'User mismatching!'], 403);
-    }
-    $orders = $user->orders()->with(['shippingAddress', 'products'])->get();
+  public function index() {
+    $orders = auth('api')->user()->orders()->with(['products'])->get();
     return response()->json($orders);
   }
 
   // Get a specific order of a user
-  public function show(User $user, Order $order) {
-    if (auth('api')->user()->id !== $user->id) {
-      return response()->json(['message' => 'User mismatching!'], 403);
-    }
+  public function show(Order $order) {
+    Gate::authorize('access', $order);
 
     return response()->json($order->load(['shippingAddress', 'products']));
   }
 
 
-  public function store(CreateOrderRequest $request, User $user) {
-    if (auth('api')->user()->id !== $user->id) {
-      return response()->json(['message' => 'User mismatching!'], 403);
-    }
+  public function store(CreateOrderRequest $request) {
+
 
     try {
       DB::beginTransaction();
 
       $data = $request->validated();
 
-      if (!$user->shippingAddress) {
+      if (!auth('api')->user()->shippingAddress) {
         return response()->json(['message' => 'User does not have a shipping address set.'], 400);
       }
 
@@ -117,8 +110,8 @@ class OrderController extends Controller {
       }
 
       // Create the order with the user's shipping address and total price
-      $order = $user->orders()->create([
-        'shipping_address_id' => $user->shippingAddress->id,
+      $order = auth('api')->user()->orders()->create([
+        'shipping_address_id' => auth('api')->user()->shippingAddress->id,
         'total_price' => $orderTotal, // Total price after discount
       ]);
 
@@ -139,17 +132,12 @@ class OrderController extends Controller {
   }
 
 
+  public function update(UpdateOrderRequest $request, Order $order) {
+    Gate::authorize('access', $order);
 
-
-
-  public function update(UpdateOrderRequest $request, User $user, Order $order) {
     try {
       DB::beginTransaction();
 
-      // Ensure the order belongs to the user
-      if (auth('api')->user()->id !== $user->id) {
-        return response()->json(['message' => 'User mismatching!'], 403);
-      }
 
       // Prevent updates to a paid order
       if (strtolower($order->payment_status) === 'paid') {
@@ -243,7 +231,7 @@ class OrderController extends Controller {
       $order->products()->sync($productsToSync);
 
       // Set the shipping address from the user
-      $data['shipping_address_id'] = $user->shippingAddress->id;
+      $data['shipping_address_id'] = auth('api')->user()->shippingAddress->id;
       $data['total_price'] = $orderTotal; // Update the total price after discount
 
       // Update the order with the validated data
@@ -269,11 +257,9 @@ class OrderController extends Controller {
 
 
   // Delete an order
-  public function destroy(User $user, Order $order) {
-    // Ensure the order belongs to the user
-    if (auth('api')->user()->id !== $user->id) {
-      return response()->json(['message' => 'User mismatching!'], 403);
-    }
+  public function destroy(Order $order) {
+    Gate::authorize('access', $order);
+
 
     // Prevent deletion if the payment status is "paid"
     if (strtolower($order->payment_status) === 'paid') {
@@ -306,10 +292,8 @@ class OrderController extends Controller {
     }
   }
 
-  public function createStripeSession(Request $request, User $user, Order $order) {
-    if (auth('api')->user()->id !== $user->id) {
-      return response()->json(['message' => 'User mismatching!'], 403);
-    }
+  public function createStripeSession(Request $request, Order $order) {
+    Gate::authorize('access', $order);
 
     if (strtolower($order->payment_status) === 'paid') {
       return response()->json(['message' => 'This order has already been paid.'], 403);
