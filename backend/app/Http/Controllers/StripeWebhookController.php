@@ -40,7 +40,7 @@ class StripeWebhookController extends Controller {
       $orderId = $session['metadata']['order_id'];
       $paymentStatus = $session['payment_status'];
       $paymentMethod = $session['payment_method_types'][0];
-      $totalAmount = $session['amount_total'];
+      // $totalAmount = $session['amount_total'];
       $currency = $session['currency'];
 
       // Find and update the order
@@ -48,7 +48,7 @@ class StripeWebhookController extends Controller {
 
       if ($order) {
         $order->update([
-          'total_price' => $totalAmount / 100, // Convert from cents
+          // 'total_price' => $totalAmount / 100, // Convert from cents
           'currency' => $currency,
           'payment_method' => $paymentMethod,
           'payment_status' => $paymentStatus,

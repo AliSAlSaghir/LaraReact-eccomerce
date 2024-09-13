@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -35,19 +36,15 @@ class OrderController extends Controller {
 
 
   public function store(CreateOrderRequest $request, User $user) {
-
     if (auth('api')->user()->id !== $user->id) {
       return response()->json(['message' => 'User mismatching!'], 403);
     }
 
     try {
-      // Start a transaction to ensure data consistency
       DB::beginTransaction();
 
-      // Validate the request data
       $data = $request->validated();
 
-      // Ensure the user has a shipping address
       if (!$user->shippingAddress) {
         return response()->json(['message' => 'User does not have a shipping address set.'], 400);
       }
@@ -58,55 +55,82 @@ class OrderController extends Controller {
         $productId = $product['id'];
         $quantity = $product['quantity'];
 
-        // If the product already exists, sum the quantities
         if (isset($mergedProducts[$productId])) {
           $mergedProducts[$productId]['quantity'] += $quantity;
         } else {
-          // Otherwise, add the product to the mergedProducts array
           $mergedProducts[$productId] = $product;
         }
       }
 
       $productsToSync = [];
+      $orderTotal = 0;
+
+      // Calculate the total price and prepare products to sync
       foreach ($mergedProducts as $product) {
         $productModel = Product::findOrFail($product['id']);
         $quantity = $product['quantity'];
-
-        // Calculate qty_left and check if requested quantity exceeds it
         $qtyLeft = $productModel->total_qty;
+
         if ($quantity > $qtyLeft) {
           return response()->json([
             'message' => "Insufficient stock for product {$productModel->name}. Only {$qtyLeft} left."
           ], 400);
         }
 
-        // Adjust the total sold and available quantity
         $productModel->increment('total_sold', $quantity);
         $productModel->decrement('total_qty', $quantity);
 
         $productsToSync[$product['id']] = [
           'quantity' => $quantity,
-          'price' => $productModel->price // Store the product price at the time of order
+          'price' => $productModel->price // Original price
         ];
+
+        // Calculate the total order amount (before applying the coupon)
+        $orderTotal += $productModel->price * $quantity;
       }
 
-      // Create the order with the user's shipping address (without total price)
+      // Check if the coupon is provided in the query string
+      $couponCode = $request->query('coupon');
+      if ($couponCode) {
+        $coupon = Coupon::where('code', strtoupper($couponCode))
+          ->where('start_date', '<=', now())
+          ->where('end_date', '>=', now())
+          ->first();
+
+        // If coupon is invalid or expired
+        if (!$coupon || $coupon->isExpired) {
+          return response()->json(['message' => 'Invalid or expired coupon.'], 400);
+        }
+
+
+        // Apply the coupon discount to each product price
+        $discount = $coupon->discount / 100;
+        foreach ($productsToSync as $productId => $syncData) {
+          $productsToSync[$productId]['price'] = $syncData['price'] * (1 - $discount);
+        }
+
+        // Recalculate the order total after applying the coupon
+        $orderTotal = 0;
+        foreach ($productsToSync as $syncData) {
+          $orderTotal += $syncData['price'] * $syncData['quantity'];
+        }
+      }
+
+      // Create the order with the user's shipping address and total price
       $order = $user->orders()->create([
         'shipping_address_id' => $user->shippingAddress->id,
+        'total_price' => $orderTotal, // Total price after discount
       ]);
 
       // Sync the products to the order
       $order->products()->sync($productsToSync);
 
-      // Commit the transaction
       DB::commit();
 
       return response()->json($order->load('products'), 201);
     } catch (Throwable $e) {
-      // Rollback the transaction in case of error
       DB::rollBack();
 
-      // Log the error and return a server error response
       return response()->json([
         'message' => 'Something went wrong while creating the order. Please try again.',
         'error' => $e->getMessage()
@@ -117,9 +141,9 @@ class OrderController extends Controller {
 
 
 
+
   public function update(UpdateOrderRequest $request, User $user, Order $order) {
     try {
-      // Start a transaction to ensure data consistency
       DB::beginTransaction();
 
       // Ensure the order belongs to the user
@@ -145,15 +169,14 @@ class OrderController extends Controller {
         if (isset($mergedProducts[$productId])) {
           $mergedProducts[$productId]['quantity'] += $quantity;
         } else {
-          // Otherwise, add the product to the mergedProducts array
           $mergedProducts[$productId] = $product;
         }
       }
 
-      // Initialize variables for product syncing (no total price calculation)
+      // Initialize variables for product syncing and total order price calculation
       $productsToSync = [];
+      $orderTotal = 0;
 
-      // Loop through each product in the mergedProducts array
       foreach ($mergedProducts as $product) {
         $productModel = Product::findOrFail($product['id']);
         $newQuantity = $product['quantity'];
@@ -180,11 +203,40 @@ class OrderController extends Controller {
           $productModel->increment('total_qty', $diff);
         }
 
-        // Prepare the data for syncing with the order
+        // Add the product price and quantity to calculate total order price
         $productsToSync[$product['id']] = [
           'quantity' => $newQuantity,
           'price' => $productModel->price // Store the product price at the time of order
         ];
+
+        // Add to the total price
+        $orderTotal += $productModel->price * $newQuantity;
+      }
+
+      // Check if a coupon is provided in the query string
+      $couponCode = $request->query('coupon');
+      if ($couponCode) {
+        $coupon = Coupon::where('code', strtoupper($couponCode))
+          ->where('start_date', '<=', now())
+          ->where('end_date', '>=', now())
+          ->first();
+
+        // If coupon is invalid or expired
+        if (!$coupon || $coupon->isExpired) {
+          return response()->json(['message' => 'Invalid or expired coupon.'], 400);
+        }
+
+        // Apply the coupon discount to each product price
+        $discount = $coupon->discount / 100;
+        foreach ($productsToSync as $productId => $syncData) {
+          $productsToSync[$productId]['price'] = $syncData['price'] * (1 - $discount);
+        }
+
+        // Recalculate the order total after applying the coupon
+        $orderTotal = 0;
+        foreach ($productsToSync as $syncData) {
+          $orderTotal += $syncData['price'] * $syncData['quantity'];
+        }
       }
 
       // Sync the updated products with the order
@@ -192,26 +244,25 @@ class OrderController extends Controller {
 
       // Set the shipping address from the user
       $data['shipping_address_id'] = $user->shippingAddress->id;
+      $data['total_price'] = $orderTotal; // Update the total price after discount
 
       // Update the order with the validated data
       $order->update($data);
 
-      // Commit the transaction
       DB::commit();
 
-      // Return the updated order
+      // Return the updated order with the products
       return response()->json($order->load('products'));
     } catch (Throwable $e) {
-      // Rollback the transaction in case of error
       DB::rollBack();
 
-      // Log the error and return a server error response
       return response()->json([
         'message' => 'Something went wrong while updating the order. Please try again.',
         'error' => $e->getMessage()
       ], 500);
     }
   }
+
 
 
 
@@ -258,6 +309,10 @@ class OrderController extends Controller {
   public function createStripeSession(Request $request, User $user, Order $order) {
     if (auth('api')->user()->id !== $user->id) {
       return response()->json(['message' => 'User mismatching!'], 403);
+    }
+
+    if (strtolower($order->payment_status) === 'paid') {
+      return response()->json(['message' => 'This order has already been paid.'], 403);
     }
 
     // Initialize Stripe with the secret key

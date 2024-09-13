@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ColorController;
+use App\Http\Controllers\CouponController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
@@ -51,5 +52,6 @@ Route::middleware(['cookie.auth', 'role:admin'])->group(function () {
     Route::apiResource('brands', BrandController::class);
     Route::apiResource('orders', AdminOrderController::class)->except(['store', 'update']);
     Route::put('orders/{order}/updateOrdersStatus', [AdminOrderController::class, 'updateOrdersStatus']);
+    Route::apiResource('coupons', CouponController::class);
   });
 });
