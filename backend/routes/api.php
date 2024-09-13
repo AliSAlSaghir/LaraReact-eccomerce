@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
@@ -48,5 +49,7 @@ Route::middleware(['cookie.auth', 'role:admin'])->group(function () {
     Route::apiResource('products', ProductController::class)->except(['index', 'show']);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('brands', BrandController::class);
+    Route::apiResource('orders', AdminOrderController::class)->except(['store', 'update']);
+    Route::put('orders/{order}/updateOrdersStatus', [AdminOrderController::class, 'updateOrdersStatus']);
   });
 });
