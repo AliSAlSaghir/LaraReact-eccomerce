@@ -19,8 +19,6 @@ class CreateOrderRequest extends FormRequest {
    */
   public function rules(): array {
     return [
-      'payment_method' => 'required|string',
-      'currency' => 'required|string|max:3',
       'products' => 'required|array',
       'products.*.id' => 'exists:products,id',
       'products.*.quantity' => 'required|integer|min:1',

@@ -36,6 +36,7 @@ class AuthController extends Controller {
   public function me() {
     $user = User::findOrFail(auth('api')->id());
     $user->load('shippingAddress');
+    $user->load('orders');
     return response()->json($user);
   }
 

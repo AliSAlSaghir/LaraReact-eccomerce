@@ -8,6 +8,9 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Request;
+use Stripe\Checkout\Session;
+use Stripe\Stripe;
 use Throwable;
 
 class OrderController extends Controller {
@@ -49,12 +52,24 @@ class OrderController extends Controller {
         return response()->json(['message' => 'User does not have a shipping address set.'], 400);
       }
 
-      // Calculate total price based on products
-      $totalPrice = 0;
-      $productsToSync = [];
+      // Merge duplicate products by summing quantities
+      $mergedProducts = [];
       foreach ($request->products as $product) {
+        $productId = $product['id'];
+        $quantity = $product['quantity'];
+
+        // If the product already exists, sum the quantities
+        if (isset($mergedProducts[$productId])) {
+          $mergedProducts[$productId]['quantity'] += $quantity;
+        } else {
+          // Otherwise, add the product to the mergedProducts array
+          $mergedProducts[$productId] = $product;
+        }
+      }
+
+      $productsToSync = [];
+      foreach ($mergedProducts as $product) {
         $productModel = Product::findOrFail($product['id']);
-        $price = $productModel->price;
         $quantity = $product['quantity'];
 
         // Calculate qty_left and check if requested quantity exceeds it
@@ -69,19 +84,15 @@ class OrderController extends Controller {
         $productModel->increment('total_sold', $quantity);
         $productModel->decrement('total_qty', $quantity);
 
-        $totalPrice += $price * $quantity;
         $productsToSync[$product['id']] = [
           'quantity' => $quantity,
-          'price' => $price
+          'price' => $productModel->price // Store the product price at the time of order
         ];
       }
 
-      // Create the order with the user's shipping address and calculated total price
+      // Create the order with the user's shipping address (without total price)
       $order = $user->orders()->create([
         'shipping_address_id' => $user->shippingAddress->id,
-        'payment_method' => $data['payment_method'],
-        'currency' => $data['currency'],
-        'total_price' => $totalPrice,
       ]);
 
       // Sync the products to the order
@@ -104,6 +115,8 @@ class OrderController extends Controller {
   }
 
 
+
+
   public function update(UpdateOrderRequest $request, User $user, Order $order) {
     try {
       // Start a transaction to ensure data consistency
@@ -122,12 +135,26 @@ class OrderController extends Controller {
       // Validate the request data
       $data = $request->validated();
 
-      // Initialize variables for total price calculation and product syncing
-      $totalPrice = 0;
+      // Merge duplicate products by summing quantities
+      $mergedProducts = [];
+      foreach ($request->products as $product) {
+        $productId = $product['id'];
+        $quantity = $product['quantity'];
+
+        // If the product already exists, sum the quantities
+        if (isset($mergedProducts[$productId])) {
+          $mergedProducts[$productId]['quantity'] += $quantity;
+        } else {
+          // Otherwise, add the product to the mergedProducts array
+          $mergedProducts[$productId] = $product;
+        }
+      }
+
+      // Initialize variables for product syncing (no total price calculation)
       $productsToSync = [];
 
-      // Loop through each product in the request
-      foreach ($request->products as $product) {
+      // Loop through each product in the mergedProducts array
+      foreach ($mergedProducts as $product) {
         $productModel = Product::findOrFail($product['id']);
         $newQuantity = $product['quantity'];
         $oldQuantity = $order->products()->find($product['id'])->pivot->quantity ?? 0;
@@ -153,21 +180,15 @@ class OrderController extends Controller {
           $productModel->increment('total_qty', $diff);
         }
 
-        $price = $productModel->price;
-        $totalPrice += $price * $newQuantity;
-
         // Prepare the data for syncing with the order
         $productsToSync[$product['id']] = [
           'quantity' => $newQuantity,
-          'price' => $price
+          'price' => $productModel->price // Store the product price at the time of order
         ];
       }
 
       // Sync the updated products with the order
       $order->products()->sync($productsToSync);
-
-      // Update the total price before saving the order
-      $data['total_price'] = $totalPrice;
 
       // Set the shipping address from the user
       $data['shipping_address_id'] = $user->shippingAddress->id;
@@ -191,6 +212,8 @@ class OrderController extends Controller {
       ], 500);
     }
   }
+
+
 
 
 
@@ -229,6 +252,50 @@ class OrderController extends Controller {
     } catch (\Exception $e) {
       DB::rollBack();
       return response()->json(['message' => 'Order deletion failed'], 500);
+    }
+  }
+
+  public function createStripeSession(Request $request, User $user, Order $order) {
+    if (auth('api')->user()->id !== $user->id) {
+      return response()->json(['message' => 'User mismatching!'], 403);
+    }
+
+    // Initialize Stripe with the secret key
+    Stripe::setApiKey(env('STRIPE_SECRET'));
+
+    // Prepare the order items for the Stripe session
+    $orderItems = $order->products()->withPivot('quantity', 'price')->get();
+
+    $convertedOrders = $orderItems->map(function ($item) {
+      return [
+        'price_data' => [
+          'currency' => 'usd',
+          'product_data' => [
+            'name' => $item->name,
+            'description' => $item->description,
+          ],
+          'unit_amount' => $item->pivot->price * 100, // Stripe expects amounts in cents
+        ],
+        'quantity' => $item->pivot->quantity,
+      ];
+    })->toArray();
+
+    // Create the Stripe checkout session
+    try {
+      $session = Session::create([
+        'line_items' => $convertedOrders,
+        'metadata' => [
+          'order_id' => $order->id,
+        ],
+        'mode' => 'payment',
+        'success_url' => 'http://localhost:3000/success',
+        'cancel_url' => 'http://localhost:3000/cancel',
+      ]);
+
+      // Return the session URL
+      return response()->json(['url' => $session->url]);
+    } catch (\Exception $e) {
+      return response()->json(['error' => 'Something went wrong creating the Stripe session'], 500);
     }
   }
 }

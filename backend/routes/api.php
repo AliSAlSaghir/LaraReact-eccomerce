@@ -9,7 +9,10 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ShippingAddressController;
 use App\Http\Controllers\SizeController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
 Route::middleware(['custom.guest'])->group(function () {
   Route::group(['prefix' => 'auth'], function ($router) {
@@ -35,6 +38,7 @@ Route::middleware(['cookie.auth'])->group(function () {
   Route::put('updateShippingAddress', [ShippingAddressController::class, 'update']);
   Route::delete('deleteShippingAddress', [ShippingAddressController::class, 'destroy']);
   Route::apiResource('users.orders', OrderController::class);
+  Route::post('users/{user}/orders/{order}/createStripeSession', [OrderController::class, 'createStripeSession']);
 });
 
 Route::middleware(['cookie.auth', 'role:admin'])->group(function () {
