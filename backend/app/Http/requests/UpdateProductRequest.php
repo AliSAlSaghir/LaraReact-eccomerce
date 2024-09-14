@@ -30,7 +30,7 @@ class UpdateProductRequest extends FormRequest {
       'images' => 'array',
       'images.*' => 'file|mimes:jpeg,png,jpg,gif|max:2048',
       'price' => 'numeric',
-      'total_qty' => 'integer',
+      'quantity' => 'integer',
       'total_sold' => 'integer',
     ];
   }

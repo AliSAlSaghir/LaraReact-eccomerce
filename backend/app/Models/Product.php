@@ -16,7 +16,7 @@ class Product extends Model {
     'user_id',
     'images',
     'price',
-    'total_qty',
+    'quantity',
     'total_sold'
   ];
 
@@ -54,9 +54,9 @@ class Product extends Model {
     return $this->belongsToMany(Size::class, 'product_size');
   }
 
-  // qtyLeft: totalQty - totalSold
-  public function getQtyLeftAttribute() {
-    return $this->total_qty - $this->total_sold;
+
+  public function getTotalQtyAttribute() {
+    return $this->quantity + $this->total_sold;
   }
 
   // totalReviews: count of reviews

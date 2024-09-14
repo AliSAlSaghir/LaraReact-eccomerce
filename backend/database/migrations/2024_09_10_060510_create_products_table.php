@@ -21,7 +21,7 @@ return new class extends Migration {
       $table->foreignIdFor(User::class)->cascadeOnDelete();
       $table->json('images'); // Store images as an array
       $table->decimal('price', 10, 2); // Price with two decimal precision
-      $table->integer('total_qty'); // Total quantity of product
+      $table->integer('quantity'); // Total quantity of product
       $table->integer('total_sold')->default(0); // Total sold with a default of 0
       $table->timestamps();
     });

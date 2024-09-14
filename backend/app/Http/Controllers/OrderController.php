@@ -65,7 +65,7 @@ class OrderController extends Controller {
       foreach ($mergedProducts as $product) {
         $productModel = Product::findOrFail($product['id']);
         $quantity = $product['quantity'];
-        $qtyLeft = $productModel->total_qty;
+        $qtyLeft = $productModel->quantity;
 
         if ($quantity > $qtyLeft) {
           return response()->json([
@@ -74,7 +74,7 @@ class OrderController extends Controller {
         }
 
         $productModel->increment('total_sold', $quantity);
-        $productModel->decrement('total_qty', $quantity);
+        $productModel->decrement('quantity', $quantity);
 
         $productsToSync[$product['id']] = [
           'quantity' => $quantity,
@@ -173,8 +173,8 @@ class OrderController extends Controller {
         $newQuantity = $product['quantity'];
         $oldQuantity = $order->products()->find($product['id'])->pivot->quantity ?? 0;
 
-        // Calculate qty_left (total_qty + oldQuantity because the old quantity is reserved in the order)
-        $qtyLeft = $productModel->total_qty + $oldQuantity;
+        // Calculate qty_left (quantity + oldQuantity because the old quantity is reserved in the order)
+        $qtyLeft = $productModel->quantity + $oldQuantity;
 
         // Check if the requested quantity exceeds the available quantity
         if ($newQuantity > $qtyLeft) {
@@ -187,11 +187,11 @@ class OrderController extends Controller {
         if ($newQuantity > $oldQuantity) {
           $diff = $newQuantity - $oldQuantity;
           $productModel->increment('total_sold', $diff);
-          $productModel->decrement('total_qty', $diff);
+          $productModel->decrement('quantity', $diff);
         } else {
           $diff = $oldQuantity - $newQuantity;
           $productModel->decrement('total_sold', $diff);
-          $productModel->increment('total_qty', $diff);
+          $productModel->increment('quantity', $diff);
         }
 
         // Add the product price and quantity to calculate total order price
@@ -277,7 +277,7 @@ class OrderController extends Controller {
         $quantity = $product->pivot->quantity;
 
         $product->decrement('total_sold', $quantity);
-        $product->increment('total_qty', $quantity);
+        $product->increment('quantity', $quantity);
       }
 
       // Detach products from the order
