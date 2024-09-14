@@ -84,4 +84,27 @@ class AdminOrderController extends Controller {
     $order->delete();
     return response()->noContent();
   }
+
+  public function getOrderStats() {
+    // Get total sales stats
+    $orderStats = Order::selectRaw('
+        MIN(total_price) as minimumSale,
+        MAX(total_price) as maxSale,
+        SUM(total_price) as totalSales,
+        AVG(total_price) as avgSale
+    ')->first();
+
+    // Format avgSale to two decimal places
+    $orderStats->avgSale = number_format($orderStats->avgSale, 2);
+
+    // Get today's sales
+    $today = now()->startOfDay();
+    $saleToday = Order::where('created_at', '>=', $today)
+      ->sum('total_price');
+
+    return response()->json([
+      'orders' => $orderStats,
+      'saleToday' => number_format($saleToday, 2),
+    ], 200);
+  }
 }

@@ -50,6 +50,7 @@ Route::middleware(['cookie.auth', 'role:admin'])->group(function () {
     Route::apiResource('products', ProductController::class)->except(['index', 'show']);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('brands', BrandController::class);
+    Route::get('orders/getOrderStats', [AdminOrderController::class, 'getOrderStats']);
     Route::apiResource('orders', AdminOrderController::class)->except(['store', 'update']);
     Route::put('orders/{order}/updateOrdersStatus', [AdminOrderController::class, 'updateOrdersStatus']);
     Route::apiResource('coupons', CouponController::class);
