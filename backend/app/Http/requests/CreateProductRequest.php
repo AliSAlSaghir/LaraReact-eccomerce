@@ -30,7 +30,7 @@ class CreateProductRequest extends FormRequest {
       'images' => 'nullable|array',
       'images.*' => 'file|mimes:jpeg,png,jpg,gif|max:2048',
       'price' => 'required|numeric',
-      'total_qty' => 'required|integer',
+      'quantity' => 'required|integer',
       'total_sold' => 'integer',
     ];
   }
