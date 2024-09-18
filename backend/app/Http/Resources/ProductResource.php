@@ -31,7 +31,7 @@ class ProductResource extends JsonResource {
       'reviews' => $this->reviews->map(fn($review) => [
         'id' => $review->id,
         'user_id' => $review->user_id,
-        'comment' => $review->comment,
+        'message' => $review->message,
         'rating' => $review->rating,
         'created_at' => $review->created_at,
       ])

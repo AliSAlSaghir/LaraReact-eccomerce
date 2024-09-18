@@ -54,11 +54,6 @@ class Product extends Model {
     return $this->belongsToMany(Size::class, 'product_size');
   }
 
-<<<<<<< HEAD
-
-=======
-  // qtyLeft: totalQty - totalSold
->>>>>>> 3e036a5763a3c49625abea8df1940187de22d428
   public function getTotalQtyAttribute() {
     return $this->quantity + $this->total_sold;
   }
