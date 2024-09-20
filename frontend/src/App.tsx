@@ -31,6 +31,8 @@ import AddCategory from "./components/Admin/Categories/AddCategory";
 import HomePage from "./components/HomePage/HomePage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import AdminRoute from "./components/Auth/AdminRoute";
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
 
 const App = () => {
   return (
@@ -40,47 +42,51 @@ const App = () => {
       {/* hide navbar if admin */}
       <Routes>
         {/* nested route */}
-        <Route path="admin" element={<AdminDashboard />}>
-          {/* products */} <Route path="" element={<OrdersList />} />
-          <Route path="add-product" element={<AddProduct />} />
-          <Route path="manage-products" element={<ManageStocks />} />
-          <Route path="products/edit/:id" element={<UpdateProduct />} />
-          {/* coupons */}
-          <Route path="add-coupon" element={<AddCoupon />} />
-          <Route path="manage-coupon" element={<ManageCoupons />} />
-          <Route path="manage-coupon/edit/:code" element={<UpdateCoupon />} />
-          {/* Category */}
-          <Route path="category-to-add" element={<CategoryToAdd />} />{" "}
-          <Route path="add-category" element={<AddCategory />} />
-          <Route path="manage-category" element={<ManageCategories />} />
-          <Route path="edit-category/:id" element={<UpdateCategory />} />
-          {/* brand category */}
-          <Route path="add-brand" element={<AddBrand />} />
-          <Route path="all-brands" element={<BrandsColorsList />} />
-          {/* color category */}
-          <Route path="add-color" element={<AddColor />} />
-          <Route path="all-colors" element={<BrandsColorsList />} />
-          {/* Orders */}
-          <Route path="manage-orders" element={<ManageOrders />} />
-          <Route path="order-payment" element={<OrderPayment />} />
-          <Route path="customers" element={<Customers />} />
+        <Route element={<AdminRoute />}>
+          <Route path="admin" element={<AdminDashboard />}>
+            {/* products */} <Route path="" element={<OrdersList />} />
+            <Route path="add-product" element={<AddProduct />} />
+            <Route path="manage-products" element={<ManageStocks />} />
+            <Route path="products/edit/:id" element={<UpdateProduct />} />
+            {/* coupons */}
+            <Route path="add-coupon" element={<AddCoupon />} />
+            <Route path="manage-coupon" element={<ManageCoupons />} />
+            <Route path="manage-coupon/edit/:code" element={<UpdateCoupon />} />
+            {/* Category */}
+            <Route path="category-to-add" element={<CategoryToAdd />} />{" "}
+            <Route path="add-category" element={<AddCategory />} />
+            <Route path="manage-category" element={<ManageCategories />} />
+            <Route path="edit-category/:id" element={<UpdateCategory />} />
+            {/* brand category */}
+            <Route path="add-brand" element={<AddBrand />} />
+            <Route path="all-brands" element={<BrandsColorsList />} />
+            {/* color category */}
+            <Route path="add-color" element={<AddColor />} />
+            <Route path="all-colors" element={<BrandsColorsList />} />
+            {/* Orders */}
+            <Route path="manage-orders" element={<ManageOrders />} />
+            <Route path="order-payment" element={<OrderPayment />} />
+            <Route path="customers" element={<Customers />} />
+          </Route>
         </Route>
         {/* public links */}
         {/* Products */}
-        <Route path="/" element={<HomePage />} />
+        <Route index element={<HomePage />} />
         <Route path="/products-filters" element={<ProductsFilters />} />
         <Route path="/products/:id" element={<Product />} />
         <Route path="/all-categories" element={<AllCategories />} />
         {/* review */}
-        <Route path="/add-review/:id" element={<AddReview />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/add-review/:id" element={<AddReview />} />
 
-        {/* shopping cart */}
-        <Route path="/shopping-cart" element={<ShoppingCart />} />
-        <Route path="/order-payment" element={<OrderPayment />} />
-        {/* users */}
+          {/* shopping cart */}
+          <Route path="/shopping-cart" element={<ShoppingCart />} />
+          <Route path="/order-payment" element={<OrderPayment />} />
+          {/* users */}
+          <Route path="/customer-profile" element={<CustomerProfile />} />
+        </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterForm />} />
-        <Route path="/customer-profile" element={<CustomerProfile />} />
       </Routes>
     </BrowserRouter>
   );

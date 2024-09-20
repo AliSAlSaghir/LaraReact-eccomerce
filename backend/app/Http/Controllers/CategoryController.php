@@ -12,7 +12,7 @@ class CategoryController extends Controller {
    * Display a listing of the resource.
    */
   public function index() {
-    return response()->json(Category::with(['products'])->latest()->get());
+    return response()->json(Category::latest()->get());
   }
 
 
@@ -43,8 +43,6 @@ class CategoryController extends Controller {
    * Display the specified resource.
    */
   public function show(Category $category) {
-    $category->load('products');
-
     return response()->json($category);
   }
 
