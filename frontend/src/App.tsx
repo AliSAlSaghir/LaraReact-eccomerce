@@ -29,10 +29,13 @@ import AdminDashboard from "./components/Admin/AdminDashboard";
 import CategoryToAdd from "./components/Admin/Categories/CategoryToAdd";
 import AddCategory from "./components/Admin/Categories/AddCategory";
 import HomePage from "./components/HomePage/HomePage";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
   return (
     <BrowserRouter>
+      <ToastContainer />
       <Navbar />
       {/* hide navbar if admin */}
       <Routes>

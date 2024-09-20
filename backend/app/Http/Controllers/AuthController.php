@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserRegisterRequest;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller {
@@ -22,11 +23,14 @@ class AuthController extends Controller {
     return $this->respondWithToken($token);
   }
 
-  public function login() {
-    $credentials = request(['email', 'password']);
+  public function login(Request $request) {
+    $credentials = $request->validate([
+      'email' => 'required|string|email|max:255',
+      'password' => 'required|string|min:6',
+    ]);
 
     if (! $token = auth('api')->attempt($credentials)) {
-      return response()->json(['error' => 'Unauthorized'], 401);
+      return response()->json(['message' => 'Unauthorized'], 401);
     }
 
     return $this->respondWithToken($token);
@@ -62,7 +66,7 @@ class AuthController extends Controller {
     $token = request()->cookie('jwt');
 
     if (!$token) {
-      return response()->json(['error' => 'No token provided'], 401);
+      return response()->json(['message' => 'No token provided'], 401);
     }
 
     // Set the token and attempt to refresh it

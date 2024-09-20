@@ -13,7 +13,7 @@ class CustomGuest {
 
       if ($token && JWTAuth::setToken($token)->check()) {
         // User is authenticated; prevent access to guest routes
-        return response()->json(['error' => 'Already authenticated'], JsonResponse::HTTP_FORBIDDEN);
+        return response()->json(['message' => 'Already authenticated'], JsonResponse::HTTP_FORBIDDEN);
       }
     } catch (\Exception $e) {
       // Optionally log the exception or handle it differently

@@ -1,28 +1,58 @@
-import React, { useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { useLoginMutation } from "../../../redux/api/auth";
+import { setCredentials } from "../../../redux/features/auth/authSlice";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { ErrorResponse } from "../../../utils/types";
 
-const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "admin@gmail.com",
-    password: "12345",
+interface FormData {
+  email: string;
+  password: string;
+}
+
+const Login: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
+    email: "jnienow@example.org",
+    password: "password",
   });
+  const { userInfo } = useAppSelector(state => state.auth);
+  const dispatch = useAppDispatch();
+  const [login, { isLoading }] = useLoginMutation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userInfo?.role === "admin") {
+      navigate("/admin");
+    } else if (userInfo?.role === "customer") {
+      navigate("/customer-profile");
+    }
+  }, [userInfo, navigate]);
+
   //---Destructuring---
   const { email, password } = formData;
   //---onchange handler----
-  const onChangeHandler = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const onChangeHandler = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value.trim() });
   };
 
   //---onsubmit handler----
-  const onSubmitHandler = (e) => {
+  const onSubmitHandler = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    try {
+      const res = await login(formData).unwrap();
+      dispatch(setCredentials({ ...res }));
+      toast.success("Successfully logged in");
+      navigate("/");
+    } catch (error) {
+      const err = error as ErrorResponse;
+      console.log(err);
+      toast.error(err.data.message);
+    }
   };
 
-  //select store data
-  const { loading, userAuth } = {};
-  //redirect
-  if (userAuth?.userInfo?.status) {
-    window.location.href = "/admin";
-  }
   return (
     <>
       <section className="py-20 bg-gray-100 overflow-x-hidden">
@@ -39,7 +69,8 @@ const Login = () => {
                 </p>
                 <form
                   className="flex flex-wrap -mx-4"
-                  onSubmit={onSubmitHandler}>
+                  onSubmit={onSubmitHandler}
+                >
                   <div className="w-full md:w-1/2 px-4 mb-8 md:mb-12">
                     <label>
                       <h4 className="mb-5 text-gray-400 uppercase font-bold font-heading">
@@ -50,7 +81,7 @@ const Login = () => {
                         value={email}
                         onChange={onChangeHandler}
                         className="p-5 w-full border border-gray-200 focus:ring-blue-300 focus:border-blue-300 rounded-md"
-                        type="email"
+                        type="text"
                       />
                     </label>
                   </div>
@@ -65,13 +96,17 @@ const Login = () => {
                         onChange={onChangeHandler}
                         className="p-5 w-full border border-gray-200 focus:ring-blue-300 focus:border-blue-300 rounded-md"
                         type="password"
+                        // minLength={6}
                       />
                     </label>
                   </div>
 
                   <div className="w-full px-4">
-                    <button className="bg-blue-800 hover:bg-blue-900 text-white font-bold font-heading py-5 px-8 rounded-md uppercase">
-                      Login
+                    <button
+                      className="bg-blue-800 hover:bg-blue-900 text-white font-bold font-heading py-5 px-8 rounded-md uppercase"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Loading..." : "Login"}
                     </button>
                   </div>
                 </form>
@@ -82,7 +117,8 @@ const Login = () => {
               style={{
                 backgroundImage:
                   'url("https://cdn.pixabay.com/photo/2017/03/29/04/47/high-heels-2184095_1280.jpg")',
-              }}></div>
+              }}
+            ></div>
           </div>
         </div>
       </section>

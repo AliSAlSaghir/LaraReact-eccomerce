@@ -21,14 +21,14 @@ class CookieAuthMiddleware {
 
       // Attempt to authenticate the user using the token
       if (!$token || !JWTAuth::setToken($token)->check()) {
-        return response()->json(['error' => 'Unauthorized'], 401);
+        return response()->json(['message' => 'Unauthorized'], 401);
       }
 
       // Set the authenticated user
       $user = JWTAuth::setToken($token)->toUser();
       auth('api')->setUser($user);
     } catch (Exception $e) {
-      return response()->json(['error' => 'Unauthorized'], 401);
+      return response()->json(['message' => 'Unauthorized'], 401);
     }
 
     return $next($request);
