@@ -5,6 +5,7 @@ import { setCredentials } from "../../../redux/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ErrorResponse } from "../../../utils/types";
+import LoadingComponent from "../../LoadingComp/LoadingComponent";
 
 interface FormData {
   email: string;
@@ -106,7 +107,7 @@ const Login: React.FC = () => {
                       className="bg-blue-800 hover:bg-blue-900 text-white font-bold font-heading py-5 px-8 rounded-md uppercase"
                       disabled={isLoading}
                     >
-                      {isLoading ? "Loading..." : "Login"}
+                      {isLoading ? <LoadingComponent /> : "Login"}
                     </button>
                   </div>
                 </form>

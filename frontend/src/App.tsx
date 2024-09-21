@@ -34,7 +34,7 @@ import "react-toastify/dist/ReactToastify.css";
 import AdminRoute from "./components/Auth/AdminRoute";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 
-const App = () => {
+const App: React.FC = () => {
   return (
     <BrowserRouter>
       <ToastContainer />

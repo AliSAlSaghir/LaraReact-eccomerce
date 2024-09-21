@@ -3,8 +3,7 @@ import { User } from "../types";
 import apiSlice from "./apiSlice";
 
 interface RegisterRequest {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   password: string;
 }

@@ -1,33 +1,59 @@
-import React, { useState } from "react";
-import ErrorComponent from "../../ErrorMsg/ErrorMsg";
+import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useNavigate, ErrorResponse } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useRegisterMutation } from "../../../redux/api/auth";
+import { setCredentials } from "../../../redux/features/auth/authSlice";
+import { useAppSelector, useAppDispatch } from "../../../redux/hooks";
+import LoadingComponent from "../../LoadingComp/LoadingComponent";
 
-const RegisterForm = () => {
-  //dispatch
-  const [formData, setFormData] = useState({
-    fullname: "",
+interface FormData {
+  name: string;
+  email: string;
+  password: string;
+}
+
+const RegisterForm: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
     email: "",
     password: "",
   });
+  const { userInfo } = useAppSelector(state => state.auth);
+  const dispatch = useAppDispatch();
+  const [register, { isLoading }] = useRegisterMutation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userInfo?.role === "admin") {
+      navigate("/admin");
+    } else if (userInfo?.role === "customer") {
+      navigate("/customer-profile");
+    }
+  }, [userInfo, navigate]);
+
   //---Destructuring---
-  const { fullname, email, password } = formData;
+  const { name, email, password } = formData;
   //---onchange handler----
-  const onChangeHandler = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const onChangeHandler = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value.trim() });
   };
 
   //---onsubmit handler----
-  const onSubmitHandler = (e) => {
+  const onSubmitHandler = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    try {
+      const res = await register(formData).unwrap();
+      dispatch(setCredentials({ ...res }));
+      toast.success("Successfully registered");
+      navigate("/");
+    } catch (error) {
+      const err = error as ErrorResponse;
+      console.log(err);
+      toast.error(err.data.message);
+    }
   };
-  //select store data
-
-  //select store data
-  const { loading, userAuth } = {};
-  //redirect
-  if (userAuth?.userInfo?.status) {
-    window.location.href = "/login";
-  }
-
   return (
     <>
       <section className="relative overflow-x-hidden">
@@ -38,16 +64,11 @@ const RegisterForm = () => {
                 <h3 className="mb-8 text-4xl md:text-5xl font-bold font-heading">
                   Signing up with social is super quick
                 </h3>
-                {/* errr */}
-                {/* Error */}
-                {userAuth?.error?.message && (
-                  <ErrorComponent message={userAuth?.error?.message} />
-                )}
                 <p className="mb-10">Please, do not hesitate</p>
                 <form onSubmit={onSubmitHandler}>
                   <input
-                    name="fullname"
-                    value={fullname}
+                    name="name"
+                    value={name}
                     onChange={onChangeHandler}
                     className="w-full mb-4 px-12 py-6 border border-gray-200 focus:ring-blue-300 focus:border-blue-300 rounded-md"
                     type="text"
@@ -58,7 +79,7 @@ const RegisterForm = () => {
                     value={email}
                     onChange={onChangeHandler}
                     className="w-full mb-4 px-12 py-6 border border-gray-200 focus:ring-blue-300 focus:border-blue-300 rounded-md"
-                    type="email"
+                    type="text"
                     placeholder="Enter your email"
                   />
                   <input
@@ -71,9 +92,10 @@ const RegisterForm = () => {
                   />
                   <button
                     // disable the button if loading is true
-                    disabled={loading}
-                    className="mt-12 md:mt-16 bg-blue-800 hover:bg-blue-900 text-white font-bold font-heading py-5 px-8 rounded-md uppercase">
-                    {loading ? "Loading..." : "Register"}
+                    disabled={isLoading}
+                    className="mt-12 md:mt-16 bg-blue-800 hover:bg-blue-900 text-white font-bold font-heading py-5 px-8 rounded-md uppercase"
+                  >
+                    {isLoading ? <LoadingComponent /> : "Register"}
                   </button>
                 </form>
               </div>

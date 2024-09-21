@@ -1,10 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAppSelector } from "../../redux/hooks";
-import { Outlet, Navigate } from "react-router-dom";
 
 const ProtectedRoute: React.FC = () => {
   const { userInfo } = useAppSelector(state => state.auth);
-  return userInfo ? <Outlet /> : <Navigate to="login" />;
+
+  useEffect(() => {
+    if (!userInfo) {
+      toast.warn("Restricted to authenticated users");
+    }
+  }, [userInfo]);
+
+  return userInfo ? <Outlet /> : <Navigate to="/login" />;
 };
 
 export default ProtectedRoute;

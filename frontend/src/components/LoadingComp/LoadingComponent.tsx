@@ -1,15 +1,16 @@
 import React from "react";
 import ReactLoading from "react-loading";
 
-const LoadingComponent = () => {
+const LoadingComponent: React.FC = () => {
   return (
     <div
       style={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-      }}>
-      <ReactLoading type="spin" color="red" />
+      }}
+    >
+      <ReactLoading type="spin" color="white" />
     </div>
   );
 };
