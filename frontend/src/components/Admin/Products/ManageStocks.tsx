@@ -8,7 +8,7 @@ export default function ManageStocks() {
   let products, loading, error;
 
   //delete product handler
-  const deleteProductHandler = (id) => {};
+  const deleteProductHandler = id => {};
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
@@ -24,7 +24,8 @@ export default function ManageStocks() {
         <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto">
+            className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
+          >
             Add New Product
           </button>
         </div>
@@ -46,50 +47,58 @@ export default function ManageStocks() {
                     <tr>
                       <th
                         scope="col"
-                        className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                        className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                      >
                         Name
                       </th>
                       <th
                         scope="col"
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      >
                         Category
                       </th>
                       <th
                         scope="col"
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      >
                         Status
                       </th>
                       <th
                         scope="col"
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      >
                         Total Qty
                       </th>
                       <th
                         scope="col"
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      >
                         Total Sold
                       </th>
 
                       <th
                         scope="col"
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      >
                         QTY Left
                       </th>
                       <th
                         scope="col"
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      >
                         Price
                       </th>
                       <th
                         scope="col"
-                        className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                        className="relative py-3.5 pl-3 pr-4 sm:pr-6"
+                      >
                         <span className="sr-only">Edit</span>
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {/* loop here */}
-                    {products?.map((product) => (
+                    {products?.map(product => (
                       <tr key={product._id}>
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
                           <div className="flex items-center">
@@ -146,17 +155,19 @@ export default function ManageStocks() {
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                           <Link
                             to={`/admin/products/edit/${product._id}`}
-                            className="text-indigo-600 hover:text-indigo-900">
+                            className="text-indigo-600 hover:text-indigo-900"
+                          >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
                               viewBox="0 0 24 24"
-                              stroke-width="1.5"
+                              strokeWidth="1.5"
                               stroke="currentColor"
-                              class="w-6 h-6">
+                              className="w-6 h-6"
+                            >
                               <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                                 d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
                               />
                             </svg>
@@ -168,14 +179,16 @@ export default function ManageStocks() {
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                           <button
                             onClick={() => deleteProductHandler(product._id)}
-                            className="text-indigo-600 hover:text-indigo-900">
+                            className="text-indigo-600 hover:text-indigo-900"
+                          >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
                               viewBox="0 0 24 24"
                               strokeWidth={1.5}
                               stroke="currentColor"
-                              className="w-6 h-6">
+                              className="w-6 h-6"
+                            >
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"

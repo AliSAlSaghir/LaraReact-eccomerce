@@ -1,22 +1,21 @@
-import { Fragment, useState } from "react";
-import { Dialog, Menu, Transition } from "@headlessui/react";
+import { FC, Fragment, SVGProps, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
 import { Link, Outlet } from "react-router-dom";
 import {
   Bars3CenterLeftIcon,
-  BellIcon,
-  ClockIcon,
   CogIcon,
-  CreditCardIcon,
-  DocumentChartBarIcon,
-  HomeIcon,
   QuestionMarkCircleIcon,
   ScaleIcon,
-  ShieldCheckIcon,
-  UserGroupIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import logo from "../Navbar/logo3.png";
-const ordersLinks = [
+
+interface Link {
+  name: string;
+  href: string;
+  icon: (() => JSX.Element) | FC<SVGProps<SVGSVGElement>>;
+  current?: boolean;
+}
+const ordersLinks: Link[] = [
   {
     name: "Dashboard",
     href: "",
@@ -27,7 +26,8 @@ const ordersLinks = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="w-6 h-6 m-1">
+        className="w-6 h-6 m-1"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -47,7 +47,8 @@ const ordersLinks = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="w-6 h-6 m-1">
+        className="w-6 h-6 m-1"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -66,7 +67,8 @@ const ordersLinks = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="w-6 h-6 m-1">
+        className="w-6 h-6 m-1"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -77,7 +79,7 @@ const ordersLinks = [
   },
 ];
 
-const productsLinks = [
+const productsLinks: Link[] = [
   {
     name: "Add Product",
     href: "add-product",
@@ -88,7 +90,8 @@ const productsLinks = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="w-6 h-6 m-1">
+        className="w-6 h-6 m-1"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -107,7 +110,7 @@ const productsLinks = [
   },
 ];
 
-const couponsLinks = [
+const couponsLinks: Link[] = [
   {
     name: "Add Coupon",
     href: "add-coupon",
@@ -118,7 +121,8 @@ const couponsLinks = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="w-6 h-6 m-1">
+        className="w-6 h-6 m-1"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -137,7 +141,8 @@ const couponsLinks = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="w-6 h-6 m-1">
+        className="w-6 h-6 m-1"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -147,11 +152,8 @@ const couponsLinks = [
     ),
   },
 ];
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
 
-const CategoryLinks = [
+const CategoryLinks: Link[] = [
   { name: "Add Category", href: "category-to-add", icon: CogIcon },
   {
     name: "Manage Category",
@@ -160,7 +162,7 @@ const CategoryLinks = [
   },
 ];
 
-const colorsLinks = [
+const colorsLinks: Link[] = [
   { name: "Add New Color", href: "add-color", icon: CogIcon },
   {
     name: "All Colors",
@@ -169,7 +171,7 @@ const colorsLinks = [
   },
 ];
 
-const brandsLinks = [
+const brandsLinks: Link[] = [
   { name: "Add New Brand", href: "add-brand", icon: CogIcon },
   {
     name: "All Brands",
@@ -178,8 +180,12 @@ const brandsLinks = [
   },
 ];
 
-export default function Example() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+function classNames(...classes: (string | boolean | null | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
+const AdminDashboard: React.FC = () => {
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   return (
     <>
@@ -188,7 +194,8 @@ export default function Example() {
           <Dialog
             as="div"
             className="relative z-40 lg:hidden"
-            onClose={setSidebarOpen}>
+            onClose={setSidebarOpen}
+          >
             <Transition.Child
               as={Fragment}
               enter="transition-opacity ease-linear duration-300"
@@ -196,7 +203,8 @@ export default function Example() {
               enterTo="opacity-100"
               leave="transition-opacity ease-linear duration-300"
               leaveFrom="opacity-100"
-              leaveTo="opacity-0">
+              leaveTo="opacity-0"
+            >
               <div className="fixed inset-0 bg-gray-600 bg-opacity-75" />
             </Transition.Child>
 
@@ -208,7 +216,8 @@ export default function Example() {
                 enterTo="translate-x-0"
                 leave="transition ease-in-out duration-300 transform"
                 leaveFrom="translate-x-0"
-                leaveTo="-translate-x-full">
+                leaveTo="-translate-x-full"
+              >
                 <Dialog.Panel className="relative flex w-full max-w-xs flex-1 flex-col bg-cyan-700 pt-5 pb-4">
                   <Transition.Child
                     as={Fragment}
@@ -217,12 +226,14 @@ export default function Example() {
                     enterTo="opacity-100"
                     leave="ease-in-out duration-300"
                     leaveFrom="opacity-100"
-                    leaveTo="opacity-0">
+                    leaveTo="opacity-0"
+                  >
                     <div className="absolute top-0 right-0 -mr-12 pt-2">
                       <button
                         type="button"
                         className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-                        onClick={() => setSidebarOpen(false)}>
+                        onClick={() => setSidebarOpen(false)}
+                      >
                         <span className="sr-only">Close sidebar</span>
                         <XMarkIcon
                           className="h-6 w-6 text-white"
@@ -234,15 +245,17 @@ export default function Example() {
                   <div className="flex flex-shrink-0 items-center px-4"></div>
                   <nav
                     className="mt-5 flex flex-1 flex-col divide-y divide-cyan-800 overflow-y-auto"
-                    aria-label="Sidebar">
+                    aria-label="Sidebar"
+                  >
                     {/* orders links mobile */}
                     <div className="mt-1 pt-1">
                       <div className="space-y-1 px-2">
-                        {ordersLinks.map((item) => (
+                        {ordersLinks.map(item => (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white">
+                            className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                          >
                             <item.icon
                               className="mr-4 h-6 w-6 text-cyan-200"
                               aria-hidden="true"
@@ -254,7 +267,7 @@ export default function Example() {
                     </div>
                     <div className="space-y-1 px-2 mt-8">
                       {/*Products  links mobile */}
-                      {productsLinks.map((item) => (
+                      {productsLinks.map(item => (
                         <Link
                           key={item.name}
                           to={item.href}
@@ -264,7 +277,8 @@ export default function Example() {
                               : "text-cyan-100 hover:text-white hover:bg-cyan-600",
                             "group flex items-center px-2 py-2 text-sm leading-6 font-medium rounded-md"
                           )}
-                          aria-current={item.current ? "page" : undefined}>
+                          aria-current={item.current ? "page" : undefined}
+                        >
                           <item.icon
                             className="mr-4 h-6 w-6 flex-shrink-0 text-cyan-200"
                             aria-hidden="true"
@@ -275,11 +289,12 @@ export default function Example() {
                     </div>
                     <div className="mt-6 pt-6">
                       <div className="space-y-1 px-2">
-                        {couponsLinks.map((item) => (
+                        {couponsLinks.map(item => (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white">
+                            className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                          >
                             <item.icon
                               className="mr-4 h-6 w-6 text-cyan-200"
                               aria-hidden="true"
@@ -292,11 +307,12 @@ export default function Example() {
                     {/* Categories mobile */}
                     <div className="mt-3 pt-3">
                       <div className="space-y-1 px-2">
-                        {CategoryLinks.map((item) => (
+                        {CategoryLinks.map(item => (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white">
+                            className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                          >
                             <item.icon
                               className="mr-4 h-6 w-6 text-cyan-200"
                               aria-hidden="true"
@@ -309,11 +325,12 @@ export default function Example() {
                     {/* colors links mobile */}
                     <div className="mt-3 pt-3">
                       <div className="space-y-1 px-2">
-                        {colorsLinks.map((item) => (
+                        {colorsLinks.map(item => (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white">
+                            className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                          >
                             <item.icon
                               className="mr-4 h-6 w-6 text-cyan-200"
                               aria-hidden="true"
@@ -326,11 +343,12 @@ export default function Example() {
                     {/* brands links mobile */}
                     <div className="mt-3 pt-3">
                       <div className="space-y-1 px-2">
-                        {brandsLinks.map((item) => (
+                        {brandsLinks.map(item => (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white">
+                            className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                          >
                             <item.icon
                               className="mr-4 h-6 w-6 text-cyan-200"
                               aria-hidden="true"
@@ -357,15 +375,17 @@ export default function Example() {
           <div className="flex flex-grow flex-col overflow-y-auto bg-cyan-900 pt-5 pb-4">
             <nav
               className="mt-5 flex flex-1 flex-col divide-y divide-cyan-800 overflow-y-auto"
-              aria-label="Sidebar">
+              aria-label="Sidebar"
+            >
               {/* orders links desktop */}
               <div className="mt-1 pt-1">
                 <div className="space-y-1 px-2">
-                  {ordersLinks.map((item) => (
+                  {ordersLinks.map(item => (
                     <Link
                       key={item.name}
                       to={item.href}
-                      className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white">
+                      className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                    >
                       <item.icon
                         className="mr-4 h-6 w-6 text-cyan-200"
                         aria-hidden="true"
@@ -377,7 +397,7 @@ export default function Example() {
               </div>
               <div className="space-y-1 px-2 mt-8">
                 {/*Products  links desktop */}
-                {productsLinks.map((item) => (
+                {productsLinks.map(item => (
                   <Link
                     key={item.name}
                     to={item.href}
@@ -387,7 +407,8 @@ export default function Example() {
                         : "text-cyan-100 hover:text-white hover:bg-cyan-600",
                       "group flex items-center px-2 py-2 text-sm leading-6 font-medium rounded-md"
                     )}
-                    aria-current={item.current ? "page" : undefined}>
+                    aria-current={item.current ? "page" : undefined}
+                  >
                     <item.icon
                       className="mr-4 h-6 w-6 flex-shrink-0 text-cyan-200"
                       aria-hidden="true"
@@ -398,11 +419,12 @@ export default function Example() {
               </div>
               <div className="mt-6 pt-6">
                 <div className="space-y-1 px-2">
-                  {couponsLinks.map((item) => (
+                  {couponsLinks.map(item => (
                     <Link
                       key={item.name}
                       to={item.href}
-                      className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white">
+                      className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                    >
                       <item.icon
                         className="mr-4 h-6 w-6 text-cyan-200"
                         aria-hidden="true"
@@ -415,11 +437,12 @@ export default function Example() {
               {/* Categories desktop */}
               <div className="mt-3 pt-3">
                 <div className="space-y-1 px-2">
-                  {CategoryLinks.map((item) => (
+                  {CategoryLinks.map(item => (
                     <Link
                       key={item.name}
                       to={item.href}
-                      className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white">
+                      className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                    >
                       <item.icon
                         className="mr-4 h-6 w-6 text-cyan-200"
                         aria-hidden="true"
@@ -432,11 +455,12 @@ export default function Example() {
               {/* colors links desktop */}
               <div className="mt-3 pt-3">
                 <div className="space-y-1 px-2">
-                  {colorsLinks.map((item) => (
+                  {colorsLinks.map(item => (
                     <Link
                       key={item.name}
                       to={item.href}
-                      className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white">
+                      className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                    >
                       <item.icon
                         className="mr-4 h-6 w-6 text-cyan-200"
                         aria-hidden="true"
@@ -449,11 +473,12 @@ export default function Example() {
               {/* brands links desktop */}
               <div className="mt-3 pt-3">
                 <div className="space-y-1 px-2">
-                  {brandsLinks.map((item) => (
+                  {brandsLinks.map(item => (
                     <Link
                       key={item.name}
                       to={item.href}
-                      className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white">
+                      className="group flex items-center rounded-md px-2 py-2 text-sm font-medium leading-6 text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                    >
                       <item.icon
                         className="mr-4 h-6 w-6 text-cyan-200"
                         aria-hidden="true"
@@ -472,7 +497,8 @@ export default function Example() {
             <button
               type="button"
               className="border-r border-gray-200 px-4 text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 lg:hidden"
-              onClick={() => setSidebarOpen(true)}>
+              onClick={() => setSidebarOpen(true)}
+            >
               <span className="sr-only">Open sidebar</span>
               <Bars3CenterLeftIcon className="h-6 w-6" aria-hidden="true" />
             </button>
@@ -505,16 +531,18 @@ export default function Example() {
                           <dd className="flex items-center text-sm font-medium capitalize text-gray-500 sm:mr-6">
                             {/* Role */}
                             <svg
-                              class="w-6 h-6"
+                              className="w-6 h-6"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg">
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
                               <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                              ></path>
                             </svg>
                             Role: Admin
                           </dd>
@@ -525,12 +553,14 @@ export default function Example() {
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg">
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
                               <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              ></path>
                             </svg>
                             Date Joined: 12/12/2020
                           </dd>
@@ -541,12 +571,14 @@ export default function Example() {
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg">
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
                               <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                              ></path>
                             </svg>
                             admin@gmail.com
                           </dd>
@@ -576,4 +608,6 @@ export default function Example() {
       </div>
     </>
   );
-}
+};
+
+export default AdminDashboard;
