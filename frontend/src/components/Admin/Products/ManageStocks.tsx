@@ -1,14 +1,26 @@
 import { Link } from "react-router-dom";
-import ErrorMsg from "../../ErrorMsg/ErrorMsg";
 import LoadingComponent from "../../LoadingComp/LoadingComponent";
-import NoDataFound from "../../NoDataFound/NoDataFound";
+import React from "react";
+import { Product, useGetProductsQuery } from "../../../redux/api/products";
+import { toast } from "react-toastify";
 
-export default function ManageStocks() {
+const ManageStocks: React.FC = () => {
   //Selector
-  let products, loading, error;
+  const { data, error, isLoading } = useGetProductsQuery();
+  let products: Product[] = [];
+  if (data) {
+    products = data.data;
+
+    if (products.length === 0) {
+      toast.info("No products found");
+    }
+  }
+  if (error) toast.error("Something went wrong");
 
   //delete product handler
-  const deleteProductHandler = id => {};
+  const deleteProductHandler = (id: number): void => {
+    console.log(id);
+  };
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
@@ -31,12 +43,10 @@ export default function ManageStocks() {
         </div>
       </div>
 
-      {loading ? (
-        <LoadingComponent />
-      ) : error ? (
-        <ErrorMsg message={error?.message} />
-      ) : products?.length <= 0 ? (
-        <NoDataFound />
+      {isLoading ? (
+        <div className="mt-20">
+          <LoadingComponent />
+        </div>
       ) : (
         <div className="mt-8 flex flex-col">
           <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -99,13 +109,13 @@ export default function ManageStocks() {
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {/* loop here */}
                     {products?.map(product => (
-                      <tr key={product._id}>
+                      <tr key={product.id}>
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
                           <div className="flex items-center">
                             <div className="h-10 w-10 flex-shrink-0">
                               <img
                                 className="h-10 w-10 rounded-full"
-                                src={product?.image}
+                                src={`http://localhost:8000/${product?.images[0]}`}
                                 alt={product?.name}
                               />
                             </div>
@@ -123,12 +133,12 @@ export default function ManageStocks() {
                           <div className="text-gray-900">
                             {product?.category}
                           </div>
-                          <div className="text-gray-500">
+                          {/* <div className="text-gray-500">
                             {product.department}
-                          </div>
+                          </div> */}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {product?.isOutOfStock ? (
+                          {product?.quantity === 0 ? (
                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                               Out of Stock
                             </span>
@@ -139,14 +149,14 @@ export default function ManageStocks() {
                           )}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {product?.totalQty}
+                          {product?.total_qty}
                         </td>
 
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {product?.totalSold}
+                          {product?.total_sold}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {product?.qtyLeft}
+                          {product?.quantity}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {product?.price}
@@ -154,7 +164,7 @@ export default function ManageStocks() {
                         {/* edit */}
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                           <Link
-                            to={`/admin/products/edit/${product._id}`}
+                            to={`/admin/products/edit/${product.id}`}
                             className="text-indigo-600 hover:text-indigo-900"
                           >
                             <svg
@@ -178,7 +188,7 @@ export default function ManageStocks() {
                         {/* delete */}
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                           <button
-                            onClick={() => deleteProductHandler(product._id)}
+                            onClick={() => deleteProductHandler(product.id)}
                             className="text-indigo-600 hover:text-indigo-900"
                           >
                             <svg
@@ -210,4 +220,6 @@ export default function ManageStocks() {
       )}
     </div>
   );
-}
+};
+
+export default ManageStocks;

@@ -10,7 +10,7 @@ const LoadingComponent: React.FC = () => {
         alignItems: "center",
       }}
     >
-      <ReactLoading type="spin" color="white" />
+      <ReactLoading type="spin" color="purple" />
     </div>
   );
 };

@@ -65,6 +65,6 @@ class Product extends Model {
 
   // averageRating: average of all review ratings
   public function getAverageRatingAttribute() {
-    return $this->reviews()->avg('rating');
+    return (float) $this->reviews()->avg('rating');
   }
 }

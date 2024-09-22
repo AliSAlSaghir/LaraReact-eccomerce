@@ -23,7 +23,7 @@ class ProductController extends Controller {
     $priceRange = $request->query('price');
 
     // Build query
-    $query = Product::with(['colors', 'sizes', 'reviews'])->latest();
+    $query = Product::latest();
 
     // Apply filters
     if ($name) {
@@ -81,24 +81,25 @@ class ProductController extends Controller {
       $images = [];
       foreach ($request->file('images') as $image) {
         $path = $image->store('images', 'public');
-        $images[] = $path;
+        $images[] = 'storage/' . $path;
       }
       $data['images'] = $images;
     } else {
       $data['images'] = [];
     }
 
+
     $product = Product::create($data);
     $product->colors()->sync($request->color_id);
     $product->sizes()->sync($request->size_id);
 
-    return response()->json($product);
+    return ProductResource::make($product);
   }
 
 
   // Display the specified product
   public function show(Product $product) {
-    return ProductResource::make($product->load(['colors', 'sizes', 'reviews']));
+    return ProductResource::make($product);
   }
 
 
@@ -112,8 +113,11 @@ class ProductController extends Controller {
     if ($request->hasFile('images')) {
       // Delete old images from storage
       foreach ($product->images as $oldImage) {
-        if (File::exists(storage_path('app/public/' . $oldImage))) {
-          File::delete(storage_path('app/public/' . $oldImage));
+        // Remove the 'storage/' prefix to get the actual path
+        $oldImagePath = str_replace('storage/', '', $oldImage);
+
+        if (File::exists(storage_path('app/public/' . $oldImagePath))) {
+          File::delete(storage_path('app/public/' . $oldImagePath));
         }
       }
 
@@ -121,12 +125,15 @@ class ProductController extends Controller {
       $images = [];
       foreach ($request->file('images') as $image) {
         $path = $image->store('images', 'public');
-        $images[] = $path;
+        // Prepend 'storage/' to the path
+        $images[] = 'storage/' . $path;
       }
 
       // Update the images field in the data array
       $data['images'] = $images;
     }
+
+
 
     // Update the product with validated data
     $product->update($data);
@@ -139,14 +146,20 @@ class ProductController extends Controller {
       $product->sizes()->sync($request->size_id);
     }
 
-    return response()->json($product);
+    return ProductResource::make($product);
   }
 
   // Remove the specified product from storage
   public function destroy(Product $product) {
     foreach ($product->images as $image) {
-      File::delete(storage_path('app/public/' . $image));
+      $imagePath = str_replace('storage/', '', $image);
+
+      // Delete the old image from storage
+      if (File::exists(storage_path('app/public/' . $imagePath))) {
+        File::delete(storage_path('app/public/' . $imagePath));
+      }
     }
+
 
     $product->colors()->detach();
     $product->sizes()->detach();
