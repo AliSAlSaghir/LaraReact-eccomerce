@@ -12,7 +12,7 @@ class BrandController extends Controller {
    * Display a listing of the resource.
    */
   public function index() {
-    return response()->json(Brand::with(['products'])->latest()->get());
+    return response()->json(Brand::latest()->get());
   }
 
 
@@ -43,8 +43,6 @@ class BrandController extends Controller {
    * Display the specified resource.
    */
   public function show(Brand $brand) {
-    $brand->load('products');
-
     return response()->json($brand);
   }
 

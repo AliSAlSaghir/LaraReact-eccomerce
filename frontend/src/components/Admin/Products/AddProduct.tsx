@@ -1,79 +1,182 @@
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
 
-import ErrorMsg from "../../ErrorMsg/ErrorMsg";
 import LoadingComponent from "../../LoadingComp/LoadingComponent";
-import SuccessMsg from "../../SuccessMsg/SuccessMsg";
+import { Product } from "../../../redux/types";
+import { useGetCategoriesQuery } from "../../../redux/api/categories";
+import { useGetBrandsQuery } from "../../../redux/api/brands";
+import { useGetColorsQuery } from "../../../redux/api/colors";
+import { useGetSizesQuery } from "../../../redux/api/sizes";
+import { ErrorResponse, Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useAddProductMutation } from "../../../redux/api/products";
 
 //animated components for react-select
 const animatedComponents = makeAnimated();
 
+export interface Options {
+  value: number;
+  label: string;
+}
+
 export default function AddProduct() {
-  let categories,
-    sizeOptionsCoverted,
-    handleSizeChange,
-    colorOptionsCoverted,
-    handleColorChangeOption,
-    brands,
-    loading,
-    error,
-    isAdded;
+  const [colorOptions, setColorOptions] = useState<Options[]>([]);
+  const [sizeOptions, setSizeOptions] = useState<Options[]>([]);
+
+  const { data: categories, error: categoriesError } = useGetCategoriesQuery();
+  const { data: brands, error: brandsError } = useGetBrandsQuery();
+  const { data: colorData, error: colorsError } = useGetColorsQuery();
+  const { data: sizeData, error: sizesError } = useGetSizesQuery();
+
+  const [addProduct, { isLoading }] = useAddProductMutation();
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    setColorOptions(() =>
+      colorData?.map(color => {
+        return { label: color.name, value: color.id };
+      })
+    );
+    setSizeOptions(() =>
+      sizeData?.map(size => {
+        return { label: size.name, value: size.id };
+      })
+    );
+  }, [colorData, sizeData]);
+
+  const error = categoriesError || brandsError || colorsError || sizesError;
+  if (error) {
+    const err = error as ErrorResponse;
+    console.error(err);
+    toast.error(err.data?.message || "An error occurred while fetching data");
+  }
 
   //---form data---
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Partial<Product>>({
     name: "",
     description: "",
-    category: "",
-    sizes: "",
-    brand: "",
-    colors: "",
-    images: "",
+    category: null,
+    size_id: [],
+    brand: null,
+    color_id: [],
+    images: [],
     price: "",
-    totalQty: "",
+    quantity: 0,
   });
 
   //onChange
-  const handleOnChange = e => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleOnChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value.trim() });
+  };
+
+  const handleColorChange = (selectedOptions: Options[] | null) => {
+    setFormData({
+      ...formData,
+      color_id: selectedOptions ? selectedOptions.map(opt => opt.value) : [],
+    });
+  };
+
+  const handleSizeChange = (selectedOptions: Options[] | null) => {
+    setFormData({
+      ...formData,
+      size_id: selectedOptions ? selectedOptions.map(opt => opt.value) : [],
+    });
+  };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+
+    if (files) {
+      const validFiles = Array.from(files).filter(
+        file =>
+          ["image/png", "image/jpeg", "image/gif"].includes(file.type) &&
+          file.size <= 10 * 1024 * 1024
+      );
+
+      if (validFiles.length !== files.length) {
+        toast.error(
+          "Invalid files: Only PNG, JPG, GIF under 10MB are allowed."
+        );
+      }
+
+      setFormData({ ...formData, images: validFiles });
+    }
   };
 
   //onSubmit
-  const handleOnSubmit = e => {
+  const handleOnSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    //reset form data
-    setFormData({
-      name: "",
-      description: "",
-      category: "",
-      sizes: "",
-      brand: "",
-      colors: "",
-      images: "",
-      price: "",
-      totalQty: "",
+
+    const formDataToSend = new FormData();
+
+    formDataToSend.append("name", formData.name || "");
+
+    formDataToSend.append("description", formData.description || "");
+    formDataToSend.append("brand_id", String(formData.brand || ""));
+    formDataToSend.append("category_id", String(formData.category || ""));
+    formDataToSend.append("price", String(formData.price || ""));
+    formDataToSend.append("quantity", String(formData.quantity || 0));
+
+    formData.color_id?.forEach((colorId, index) => {
+      formDataToSend.append(`color_id[${index}]`, String(colorId));
     });
+
+    formData.size_id?.forEach((sizeId, index) => {
+      formDataToSend.append(`size_id[${index}]`, String(sizeId));
+    });
+
+    // Append images
+    formData.images?.forEach((image, index) => {
+      formDataToSend.append(`images[${index}]`, image);
+    });
+
+    try {
+      await addProduct(formDataToSend as any).unwrap();
+
+      setFormData({
+        name: "",
+        description: "",
+        category: "",
+        size_id: [],
+        brand: "",
+        color_id: [],
+        images: [],
+        price: "",
+        quantity: 0,
+      });
+
+      toast.success("Product added successfully");
+      navigate("/admin/manage-products");
+    } catch (error) {
+      const err = error as ErrorResponse;
+      console.log(err);
+      toast.error(err.data.message);
+    }
   };
 
   return (
     <>
-      {error && <ErrorMsg message={error?.message} />}
-      {isAdded && <SuccessMsg message="Product Added Successfully" />}
-      <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="flex flex-col justify-center min-h-full py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-center text-gray-900">
             Create New Product
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            <p className="font-medium text-indigo-600 hover:text-indigo-500">
+          <p className="mt-2 text-sm text-center text-gray-600">
+            <Link
+              to="/admin/manage-products"
+              type="button"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               Manage Products
-            </p>
+            </Link>
           </p>
         </div>
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <div className="px-4 py-8 bg-white shadow sm:rounded-lg sm:px-10">
             <form className="space-y-6" onSubmit={handleOnSubmit}>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -84,7 +187,7 @@ export default function AddProduct() {
                     name="name"
                     value={formData?.name}
                     onChange={handleOnChange}
-                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
               </div>
@@ -97,14 +200,14 @@ export default function AddProduct() {
                   components={animatedComponents}
                   isMulti
                   name="sizes"
-                  options={sizeOptionsCoverted}
+                  options={sizeOptions}
                   className="basic-multi-select"
                   classNamePrefix="select"
                   isClearable={true}
                   isLoading={false}
                   isSearchable={true}
                   closeMenuOnSelect={false}
-                  onChange={item => handleSizeChange(item)}
+                  onChange={(item: Options[]) => handleSizeChange(item)}
                 />
               </div>
               {/* Select category */}
@@ -114,10 +217,9 @@ export default function AddProduct() {
                 </label>
                 <select
                   name="category"
-                  value={formData.category}
+                  value={formData.category || ""}
                   onChange={handleOnChange}
-                  className="mt-1  block w-full rounded-md border-gray-300 py-2  pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm border"
-                  defaultValue="Canada"
+                  className="block w-full py-2 pl-3 pr-10 mt-1 text-base border border-gray-300 rounded-md focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                 >
                   {/* <option>-- Select Category --</option>
                   <option value="Clothings">Clothings</option>
@@ -125,7 +227,7 @@ export default function AddProduct() {
                   <option value="Accessories">Accessories</option> */}
                   <option>-- Select Category --</option>
                   {categories?.map(category => (
-                    <option key={category?._id} value={category?.name}>
+                    <option key={category?.id} value={category?.id}>
                       {category.name}
                     </option>
                   ))}
@@ -138,14 +240,13 @@ export default function AddProduct() {
                 </label>
                 <select
                   name="brand"
-                  value={formData.brand}
+                  value={formData.brand || ""}
                   onChange={handleOnChange}
-                  className="mt-1  block w-full rounded-md border-gray-300 py-2  pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm border"
-                  defaultValue="Canada"
+                  className="block w-full py-2 pl-3 pr-10 mt-1 text-base border border-gray-300 rounded-md focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                 >
                   <option>-- Select Brand --</option>
                   {brands?.map(brand => (
-                    <option key={brand?._id} value={brand?.name}>
+                    <option key={brand?.id} value={brand?.id}>
                       {brand.name}
                     </option>
                   ))}
@@ -161,14 +262,14 @@ export default function AddProduct() {
                   components={animatedComponents}
                   isMulti
                   name="colors"
-                  options={colorOptionsCoverted}
+                  options={colorOptions}
                   className="basic-multi-select"
                   classNamePrefix="select"
                   isClearable={true}
                   isLoading={false}
                   isSearchable={true}
                   closeMenuOnSelect={false}
-                  onChange={e => handleColorChangeOption(e)}
+                  onChange={(item: Options[]) => handleColorChange(item)}
                 />
               </div>
 
@@ -181,10 +282,10 @@ export default function AddProduct() {
                   Upload Images
                 </label>
                 <div className="mt-1 sm:col-span-2 sm:mt-0">
-                  <div className="flex max-w-lg justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
+                  <div className="flex justify-center max-w-lg px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                     <div className="space-y-1 text-center">
                       <svg
-                        className="mx-auto h-12 w-12 text-gray-400"
+                        className="w-12 h-12 mx-auto text-gray-400"
                         stroke="currentColor"
                         fill="none"
                         viewBox="0 0 48 48"
@@ -200,13 +301,13 @@ export default function AddProduct() {
                       <div className="flex text-sm text-gray-600">
                         <label
                           htmlFor="file-upload"
-                          className="relative cursor-pointer rounded-md bg-white font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:text-indigo-500"
+                          className="relative font-medium text-indigo-600 bg-white rounded-md cursor-pointer focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:text-indigo-500"
                         >
                           <span>Upload files</span>
                           <input
                             name="images"
-                            value={formData.images}
-                            onChange={handleOnChange}
+                            multiple
+                            onChange={handleFileChange}
                             type="file"
                           />
                         </label>
@@ -230,7 +331,7 @@ export default function AddProduct() {
                     value={formData.price}
                     onChange={handleOnChange}
                     type="number"
-                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
               </div>
@@ -242,11 +343,11 @@ export default function AddProduct() {
                 </label>
                 <div className="mt-1">
                   <input
-                    name="totalQty"
-                    value={formData.totalQty}
+                    name="quantity"
+                    value={formData.quantity}
                     onChange={handleOnChange}
                     type="number"
-                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
               </div>
@@ -264,17 +365,17 @@ export default function AddProduct() {
                     name="description"
                     value={formData.description}
                     onChange={handleOnChange}
-                    className="block w-full rounded-md border-gray-300 border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
               </div>
               <div>
-                {loading ? (
+                {isLoading ? (
                   <LoadingComponent />
                 ) : (
                   <button
                     type="submit"
-                    className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    className="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                   >
                     Add Product
                   </button>

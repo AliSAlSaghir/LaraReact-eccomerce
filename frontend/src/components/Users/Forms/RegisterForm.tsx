@@ -59,9 +59,9 @@ const RegisterForm: React.FC = () => {
       <section className="relative overflow-x-hidden">
         <div className="container px-4 mx-auto">
           <div className="flex flex-wrap items-center">
-            <div className="w-full lg:w-2/6 px-4 mb-12 lg:mb-0">
+            <div className="w-full px-4 mb-12 lg:w-2/6 lg:mb-0">
               <div className="py-20 text-center">
-                <h3 className="mb-8 text-4xl md:text-5xl font-bold font-heading">
+                <h3 className="mb-8 text-4xl font-bold md:text-5xl font-heading">
                   Signing up with social is super quick
                 </h3>
                 <p className="mb-10">Please, do not hesitate</p>
@@ -70,7 +70,7 @@ const RegisterForm: React.FC = () => {
                     name="name"
                     value={name}
                     onChange={onChangeHandler}
-                    className="w-full mb-4 px-12 py-6 border border-gray-200 focus:ring-blue-300 focus:border-blue-300 rounded-md"
+                    className="w-full px-12 py-6 mb-4 border border-gray-200 rounded-md focus:ring-blue-300 focus:border-blue-300"
                     type="text"
                     placeholder="Full Name"
                   />
@@ -78,7 +78,7 @@ const RegisterForm: React.FC = () => {
                     name="email"
                     value={email}
                     onChange={onChangeHandler}
-                    className="w-full mb-4 px-12 py-6 border border-gray-200 focus:ring-blue-300 focus:border-blue-300 rounded-md"
+                    className="w-full px-12 py-6 mb-4 border border-gray-200 rounded-md focus:ring-blue-300 focus:border-blue-300"
                     type="text"
                     placeholder="Enter your email"
                   />
@@ -86,14 +86,14 @@ const RegisterForm: React.FC = () => {
                     name="password"
                     value={password}
                     onChange={onChangeHandler}
-                    className="w-full mb-4 px-12 py-6 border border-gray-200 focus:ring-blue-300 focus:border-blue-300 rounded-md"
+                    className="w-full px-12 py-6 mb-4 border border-gray-200 rounded-md focus:ring-blue-300 focus:border-blue-300"
                     type="password"
                     placeholder="Enter your password"
                   />
                   <button
                     // disable the button if loading is true
                     disabled={isLoading}
-                    className="mt-12 md:mt-16 bg-blue-800 hover:bg-blue-900 text-white font-bold font-heading py-5 px-8 rounded-md uppercase"
+                    className="px-8 py-5 mt-12 font-bold text-white uppercase bg-blue-800 rounded-md md:mt-16 hover:bg-blue-900 font-heading"
                   >
                     {isLoading ? <LoadingComponent /> : "Register"}
                   </button>
@@ -103,7 +103,7 @@ const RegisterForm: React.FC = () => {
           </div>
         </div>
         <div
-          className="hidden lg:block lg:absolute top-0 bottom-0 right-0 lg:w-3/6 bg-center bg-cover bg-no-repeat"
+          className="top-0 bottom-0 right-0 hidden bg-center bg-no-repeat bg-cover lg:block lg:absolute lg:w-3/6"
           style={{
             backgroundImage:
               'url("https://cdn.pixabay.com/photo/2017/03/29/04/47/high-heels-2184095_1280.jpg")',

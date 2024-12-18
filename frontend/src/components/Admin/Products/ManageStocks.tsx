@@ -1,32 +1,64 @@
 import { Link } from "react-router-dom";
 import LoadingComponent from "../../LoadingComp/LoadingComponent";
-import React from "react";
-import { Product, useGetProductsQuery } from "../../../redux/api/products";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  useDeleteProductMutation,
+  useLazyGetProductsQuery,
+} from "../../../redux/api/products";
 import { toast } from "react-toastify";
+import { Product } from "../../../redux/types";
 
 const ManageStocks: React.FC = () => {
-  //Selector
-  const { data, error, isLoading } = useGetProductsQuery();
-  let products: Product[] = [];
-  if (data) {
-    products = data.data;
+  const [products, setProducts] = useState<Product[]>([]);
+  const [showMore, setShowMore] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const length = useRef<number>(0);
 
-    if (products.length === 0) {
-      toast.info("No products found");
+  const [getProducts, { isLoading }] = useLazyGetProductsQuery();
+  const [deleteProduct] = useDeleteProductMutation();
+
+  useEffect(() => {
+    let isMounted = true; // Flag to check if component is still mounted
+
+    const fetchProducts = async () => {
+      try {
+        const { data } = await getProducts(`?page=${page}`);
+        if (isMounted) {
+          setProducts(prev => [...prev, ...(data?.data || [])]);
+          length.current = data?.meta.total ?? 0;
+          setShowMore(!!data?.links?.next);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error("Something went wrong");
+      }
+    };
+
+    fetchProducts();
+
+    return () => {
+      isMounted = false; // Cleanup flag on unmount
+    };
+  }, [getProducts, page]);
+
+  // delete product handler
+  const deleteProductHandler = async (id: number) => {
+    try {
+      await deleteProduct(id); // Delete product
+      setProducts(prev => prev.filter(product => product.id !== id));
+      length.current--;
+      toast.success("Product deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete product");
     }
-  }
-  if (error) toast.error("Something went wrong");
-
-  //delete product handler
-  const deleteProductHandler = (id: number): void => {
-    console.log(id);
   };
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-xl font-semibold text-gray-900">
-            Product List- [{products?.length}]{" "}
+            Product List- [{length.current}]{" "}
           </h1>
           <p className="mt-2 text-sm text-gray-700">
             List of all the products in your account including their name,
@@ -34,12 +66,13 @@ const ManageStocks: React.FC = () => {
           </p>
         </div>
         <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <button
+          <Link
+            to="/admin/add-product"
             type="button"
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
           >
             Add New Product
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -48,8 +81,8 @@ const ManageStocks: React.FC = () => {
           <LoadingComponent />
         </div>
       ) : (
-        <div className="mt-8 flex flex-col">
-          <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div className="flex flex-col mt-8">
+          <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
               <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                 <table className="min-w-full divide-y divide-gray-300">
@@ -106,15 +139,15 @@ const ManageStocks: React.FC = () => {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="bg-white divide-y divide-gray-200">
                     {/* loop here */}
                     {products?.map(product => (
                       <tr key={product.id}>
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                        <td className="py-4 pl-4 pr-3 text-sm whitespace-nowrap sm:pl-6">
                           <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
+                            <div className="flex-shrink-0 w-10 h-10">
                               <img
-                                className="h-10 w-10 rounded-full"
+                                className="w-10 h-10 rounded-full"
                                 src={`http://localhost:8000/${product?.images[0]}`}
                                 alt={product?.name}
                               />
@@ -129,7 +162,7 @@ const ManageStocks: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
                           <div className="text-gray-900">
                             {product?.category}
                           </div>
@@ -137,32 +170,32 @@ const ManageStocks: React.FC = () => {
                             {product.department}
                           </div> */}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
                           {product?.quantity === 0 ? (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                            <span className="inline-flex px-2 text-xs font-semibold leading-5 text-red-800 bg-red-100 rounded-full">
                               Out of Stock
                             </span>
                           ) : (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            <span className="inline-flex px-2 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full">
                               In Stock
                             </span>
                           )}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
                           {product?.total_qty}
                         </td>
 
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
                           {product?.total_sold}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
                           {product?.quantity}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
                           {product?.price}
                         </td>
                         {/* edit */}
-                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                        <td className="relative py-4 pl-3 pr-4 text-sm font-medium text-right whitespace-nowrap sm:pr-6">
                           <Link
                             to={`/admin/products/edit/${product.id}`}
                             className="text-indigo-600 hover:text-indigo-900"
@@ -186,7 +219,7 @@ const ManageStocks: React.FC = () => {
                           </Link>
                         </td>
                         {/* delete */}
-                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                        <td className="relative py-4 pl-3 pr-4 text-sm font-medium text-right whitespace-nowrap sm:pr-6">
                           <button
                             onClick={() => deleteProductHandler(product.id)}
                             className="text-indigo-600 hover:text-indigo-900"
@@ -214,6 +247,14 @@ const ManageStocks: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+              {showMore && (
+                <div
+                  onClick={() => setPage(prev => prev + 1)}
+                  className="flex justify-center mt-3 text-indigo-600 cursor-pointer hover:text-indigo-900"
+                >
+                  Show More...
+                </div>
+              )}
             </div>
           </div>
         </div>

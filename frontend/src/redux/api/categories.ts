@@ -1,14 +1,6 @@
 import { CATEGORIES_URL } from "../constants";
+import { Category } from "../types";
 import apiSlice from "./apiSlice";
-
-interface Category {
-  id: number;
-  name: string;
-  user_id: number;
-  image: string;
-  created_at: string | null;
-  updated_at: string | null;
-}
 
 const categoriesApiSlice = apiSlice.injectEndpoints({
   endpoints: builder => ({

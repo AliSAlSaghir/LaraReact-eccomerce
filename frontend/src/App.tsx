@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import ManageCategories from "./components/Admin/Categories/ManageCategories";
@@ -35,6 +35,17 @@ import AdminRoute from "./components/Auth/AdminRoute";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 
 const App: React.FC = () => {
+  useEffect(() => {
+    const expirationTime = localStorage.getItem("expirationTime");
+    if (
+      expirationTime &&
+      new Date().getTime() > new Date(expirationTime).getTime()
+    ) {
+      localStorage.removeItem("userInfo");
+      localStorage.removeItem("expirationTime");
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <ToastContainer />

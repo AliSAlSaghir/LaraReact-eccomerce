@@ -23,3 +23,64 @@ export interface User {
   updated_at: string;
   shipping_address: ShippingAddress | null;
 }
+
+export interface Review {
+  id: number;
+  user_id: number;
+  message: string;
+  rating: number;
+  created_at: string;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  description: string;
+  brand_id: number;
+  category_id: number;
+  user_id: number;
+  images: File[];
+  price: string;
+  quantity: number;
+  total_sold: number;
+  total_qty: number;
+  total_reviews: number;
+  average_rating: number;
+  brand: string;
+  category: string;
+  color_id: number[];
+  size_id: number[];
+  reviews: Review[];
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  user_id: number;
+  image: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface Brand {
+  id: number;
+  name: string;
+  user_id: number;
+  image: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface Color {
+  id: number;
+  name: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface Size {
+  id: number;
+  name: string;
+  created_at: string | null;
+  updated_at: string | null;
+}

@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Size;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller {
   // Display a listing of the products
@@ -72,6 +73,7 @@ class ProductController extends Controller {
 
   // Store a newly created product in storage
   public function store(CreateProductRequest $request) {
+    Log::info('Request data:', $request->all());
     $data = $request->validated();
 
     $data['user_id'] = auth('api')->user()->id;
