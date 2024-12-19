@@ -28,8 +28,8 @@ class ProductResource extends JsonResource {
       'average_rating' => $this->averageRating,
       'brand' => $this->brand->name,
       'category' => $this->category->name,
-      'colors' => $this->colors->map(fn($color) => $color->name),
-      'sizes' => $this->sizes->map(fn($size) => $size->name),
+      'color_id' => $this->colors->map(fn($color) => $color->id),
+      'size_id' => $this->sizes->map(fn($size) => $size->id),
       'reviews' => $this->reviews->map(fn($review) => [
         'id' => $review->id,
         'user_id' => $review->user_id,

@@ -2,7 +2,7 @@ import { ADMIN_PRODUCTS_URL, PRODUCTS_URL } from "../constants";
 import { Product } from "../types";
 import apiSlice from "./apiSlice";
 
-interface ProductResponse {
+interface ProductsResponse {
   data: Product[];
   links: {
     first: string;
@@ -26,13 +26,17 @@ interface ProductResponse {
   };
 }
 
+interface ProductResponse {
+  data: Product;
+}
+
 const productsApiSlice = apiSlice.injectEndpoints({
   endpoints: builder => ({
-    getProducts: builder.query<ProductResponse, string>({
+    getProducts: builder.query<ProductsResponse, string>({
       query: query => `${PRODUCTS_URL}${query}`,
-      transformResponse: (response: ProductResponse) => response,
+      transformResponse: (response: ProductsResponse) => response,
     }),
-    getProduct: builder.query<Product, string>({
+    getProduct: builder.query<ProductResponse, string>({
       query: id => `${PRODUCTS_URL}/${id}`,
     }),
     addProduct: builder.mutation<Product, Partial<Product>>({
@@ -40,6 +44,16 @@ const productsApiSlice = apiSlice.injectEndpoints({
         url: `${ADMIN_PRODUCTS_URL}`,
         method: "POST",
         body: newProduct,
+      }),
+    }),
+    updateProduct: builder.mutation<
+      Product,
+      { updatedProduct: Partial<Product>; id: string }
+    >({
+      query: ({ updatedProduct, id }) => ({
+        url: `${ADMIN_PRODUCTS_URL}/${id}`,
+        method: "POST",
+        body: updatedProduct,
       }),
     }),
     deleteProduct: builder.mutation<void, number>({
@@ -56,5 +70,6 @@ export const {
   useGetProductsQuery,
   useGetProductQuery,
   useAddProductMutation,
+  useUpdateProductMutation,
   useDeleteProductMutation,
 } = productsApiSlice;

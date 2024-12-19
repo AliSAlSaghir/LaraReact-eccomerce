@@ -28,7 +28,6 @@ class UpdateProductRequest extends FormRequest {
       'size_id' => 'array',
       'size_id.*' => 'exists:sizes,id',
       'images' => 'array',
-      'images.*' => 'file|mimes:jpeg,png,jpg,gif|max:2048',
       'price' => 'numeric',
       'quantity' => 'integer',
       'total_sold' => 'integer',
