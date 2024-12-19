@@ -6,3 +6,5 @@ export const COLORS_URL = "http://localhost:8000/api/colors";
 export const SIZES_URL = "http://localhost:8000/api/sizes";
 export const PRODUCTS_URL = "http://localhost:8000/api/products";
 export const ADMIN_PRODUCTS_URL = "http://localhost:8000/api/admin/products";
+export const COUPONS_URL = "http://localhost:8000/api/coupons";
+export const ADMIN_COUPONS_URL = "http://localhost:8000/api/admin/coupons";

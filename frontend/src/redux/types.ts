@@ -39,7 +39,7 @@ export interface Product {
   brand_id: number;
   category_id: number;
   user_id: number;
-  images: File[];
+  images: File[] | string[];
   price: string;
   quantity: number;
   total_sold: number;
@@ -50,6 +50,8 @@ export interface Product {
   category: string;
   color_id: number[];
   size_id: number[];
+  colors: string[];
+  sizes: string[];
   reviews: Review[];
 }
 
@@ -83,4 +85,17 @@ export interface Size {
   name: string;
   created_at: string | null;
   updated_at: string | null;
+}
+
+export interface Coupon {
+  id: number;
+  code: string;
+  start_date: string;
+  end_date: string;
+  discount: number;
+  user_id: number;
+  created_at: string;
+  updated_at: string;
+  is_expired: boolean;
+  days_left: string;
 }

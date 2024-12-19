@@ -30,6 +30,8 @@ class ProductResource extends JsonResource {
       'category' => $this->category->name,
       'color_id' => $this->colors->map(fn($color) => $color->id),
       'size_id' => $this->sizes->map(fn($size) => $size->id),
+      'colors' => $this->colors->map(fn($color) => $color->name),
+      'sizes' => $this->sizes->map(fn($size) => $size->name),
       'reviews' => $this->reviews->map(fn($review) => [
         'id' => $review->id,
         'user_id' => $review->user_id,

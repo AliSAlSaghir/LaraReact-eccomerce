@@ -61,8 +61,11 @@ const App: React.FC = () => {
             <Route path="products/edit/:id" element={<UpdateProduct />} />
             {/* coupons */}
             <Route path="add-coupon" element={<AddCoupon />} />
-            <Route path="manage-coupon" element={<ManageCoupons />} />
-            <Route path="manage-coupon/edit/:code" element={<UpdateCoupon />} />
+            <Route path="manage-coupons" element={<ManageCoupons />} />
+            <Route
+              path="manage-coupons/edit/:code"
+              element={<UpdateCoupon />}
+            />
             {/* Category */}
             <Route path="category-to-add" element={<CategoryToAdd />} />{" "}
             <Route path="add-category" element={<AddCategory />} />

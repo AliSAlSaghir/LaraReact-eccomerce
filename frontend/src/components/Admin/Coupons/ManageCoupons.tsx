@@ -1,49 +1,62 @@
-import { Link } from "react-router-dom";
+import { ErrorResponse, Link } from "react-router-dom";
 
-import ErrorMsg from "../../ErrorMsg/ErrorMsg";
 import LoadingComponent from "../../LoadingComp/LoadingComponent";
-import NoDataFound from "../../NoDataFound/NoDataFound";
+import { toast } from "react-toastify";
+import {
+  useDeleteCouponMutation,
+  useGetCouponsQuery,
+} from "../../../redux/api/coupons";
 
 export default function ManageCoupons() {
-  //get coupons
-  const { coupons, loading, error } = {};
+  const { data: coupons, isLoading, error } = useGetCouponsQuery();
+  const [deleteCoupon] = useDeleteCouponMutation();
 
-  //---deleteHandler---
+  // delete coupon handler
+  const deleteCouponHandler = async (id: number) => {
+    try {
+      await deleteCoupon(id); // Delete coupon
+      toast.success("Coupon deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete coupon");
+    }
+  };
 
-  const deleteCouponHandler = id => {};
+  if (error) {
+    const err = error as ErrorResponse;
+    console.error(err);
+    toast.error(err.data?.message || "An error occurred while fetching data");
+  }
+
+  if (coupons?.length === 0) toast.info("No Coupons Yet");
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-xl font-semibold text-gray-900">
-            Manage Coupons - [{coupons?.coupons?.length}]
-          </h1>
+          <h3 className="text-xl font-semibold text-gray-900">
+            Manage Coupons - [{coupons?.length}]
+          </h3>
           <p className="mt-2 text-sm text-gray-700">
             List of all coupons in the system
           </p>
         </div>
         <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <button
+          <Link
+            to="/admin/add-coupon"
             type="button"
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
           >
             Add New Coupon
-          </button>
+          </Link>
         </div>
       </div>
-      {loading ? (
+      {isLoading ? (
         <LoadingComponent />
-      ) : error ? (
-        <ErrorMsg
-          message={error?.message || "Something went wrong, please try again"}
-        />
-      ) : coupons?.coupons?.length <= 0 ? (
-        <NoDataFound />
       ) : (
         <>
-          <div className="mt-8 flex flex-col">
-            <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div className="flex flex-col mt-8">
+            <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
                 <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                   <table className="min-w-full divide-y divide-gray-300">
@@ -93,29 +106,29 @@ export default function ManageCoupons() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
-                      {coupons?.coupons?.map(coupon => (
-                        <tr key={coupon._id}>
-                          <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {coupons?.map(coupon => (
+                        <tr key={coupon.id}>
+                          <td className="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 whitespace-nowrap sm:pl-6">
                             {coupon?.code}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
                             {coupon?.discount}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {new Date(coupon.startDate)?.toLocaleDateString()}
+                          <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
+                            {new Date(coupon.start_date)?.toLocaleDateString()}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {new Date(coupon.endDate)?.toLocaleDateString()}
+                          <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
+                            {new Date(coupon.end_date)?.toLocaleDateString()}
                           </td>
 
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {coupon?.daysLeft}
+                          <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
+                            {coupon?.days_left}
                           </td>
                           {/* edit icon */}
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
                             <Link
-                              to={`/admin/manage-coupon/edit/${coupon.code}`}
+                              to={`/admin/manage-coupons/edit/${coupon.id}`}
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -123,7 +136,7 @@ export default function ManageCoupons() {
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
                                 stroke="currentColor"
-                                className="w-6 h-6 cursor-pointer text-indigo-600"
+                                className="w-6 h-6 text-indigo-600 cursor-pointer"
                               >
                                 <path
                                   strokeLinecap="round"
@@ -134,9 +147,9 @@ export default function ManageCoupons() {
                             </Link>
                           </td>
                           {/* delete */}
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <td className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap">
                             <button
-                              onClick={() => deleteCouponHandler(coupon?._id)}
+                              onClick={() => deleteCouponHandler(coupon?.id)}
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -144,7 +157,7 @@ export default function ManageCoupons() {
                                 viewBox="0 0 24 24"
                                 strokeWidth="1.5"
                                 stroke="currentColor"
-                                className="w-6 h-6 cursor-pointer text-indigo-600"
+                                className="w-6 h-6 text-indigo-600 cursor-pointer"
                               >
                                 <path
                                   strokeLinecap="round"

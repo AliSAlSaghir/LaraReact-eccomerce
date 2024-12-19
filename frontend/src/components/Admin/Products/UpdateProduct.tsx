@@ -55,9 +55,6 @@ export default function UpdateProduct() {
     }
   }, [product]);
 
-  console.log(product);
-  console.log(formData);
-
   const [colorOptions, setColorOptions] = useState<Options[]>([]);
   const [sizeOptions, setSizeOptions] = useState<Options[]>([]);
 
