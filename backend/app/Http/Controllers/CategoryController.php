@@ -20,18 +20,21 @@ class CategoryController extends Controller {
    * Store a newly created resource in storage.
    */
   public function store(Request $request) {
-    // return $request;
     // Validate the request
     $request->validate([
       'name' => 'required|string|max:255|unique:categories,name',
-      'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048'
+      'image' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
     $user = auth('api')->user()->id;
 
+    $imagePath = $request->hasFile('image')
+      ? $request->file('image')->store('images')
+      : "";
+
     $category = Category::create([
       'name' => $request->name,
-      'image' => $request->file('image')->store('images'),
+      'image' => $imagePath,
       'user_id' => $user,
     ]);
 

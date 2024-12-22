@@ -62,6 +62,7 @@ export interface Category {
   image: string;
   created_at: string | null;
   updated_at: string | null;
+  product_count: number;
 }
 
 export interface Brand {
@@ -71,6 +72,7 @@ export interface Brand {
   image: string;
   created_at: string | null;
   updated_at: string | null;
+  product_count: number;
 }
 
 export interface Color {
@@ -78,6 +80,7 @@ export interface Color {
   name: string;
   created_at: string | null;
   updated_at: string | null;
+  product_count: number;
 }
 
 export interface Size {
@@ -85,6 +88,7 @@ export interface Size {
   name: string;
   created_at: string | null;
   updated_at: string | null;
+  product_count: number;
 }
 
 export interface Coupon {

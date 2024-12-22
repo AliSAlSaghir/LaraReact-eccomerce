@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import ManageCategories from "./components/Admin/Categories/ManageCategories";
 import Navbar from "./components/Navbar/Navbar";
 import OrdersList from "./components/Admin/Orders/OdersList";
 import AddProduct from "./components/Admin/Products/AddProduct";
@@ -10,10 +9,6 @@ import UpdateProduct from "./components/Admin/Products/UpdateProduct";
 import AddCoupon from "./components/Admin/Coupons/AddCoupon";
 import ManageCoupons from "./components/Admin/Coupons/ManageCoupons";
 import UpdateCoupon from "./components/Admin/Coupons/UpdateCoupon";
-import UpdateCategory from "./components/Admin/Categories/UpdateCategory";
-import AddBrand from "./components/Admin/Categories/AddBrand";
-import BrandsColorsList from "./components/Admin/Categories/BrandsColorsList";
-import AddColor from "./components/Admin/Categories/AddColor";
 import ManageOrders from "./components/Admin/Orders/ManageOrders";
 import OrderPayment from "./components/Users/Products/OrderPayment";
 import Customers from "./components/Admin/Orders/Customers";
@@ -26,13 +21,13 @@ import Login from "./components/Users/Forms/Login";
 import RegisterForm from "./components/Users/Forms/RegisterForm";
 import CustomerProfile from "./components/Users/Profile/CustomerProfile";
 import AdminDashboard from "./components/Admin/AdminDashboard";
-import CategoryToAdd from "./components/Admin/Categories/CategoryToAdd";
-import AddCategory from "./components/Admin/Categories/AddCategory";
 import HomePage from "./components/HomePage/HomePage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AdminRoute from "./components/Auth/AdminRoute";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import AddAttribute from "./components/Admin/Attributes/AddAttribute";
+import ManageAttributes from "./components/Admin/Attributes/ManageAttributes";
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -66,17 +61,9 @@ const App: React.FC = () => {
               path="manage-coupons/edit/:code"
               element={<UpdateCoupon />}
             />
-            {/* Category */}
-            <Route path="category-to-add" element={<CategoryToAdd />} />{" "}
-            <Route path="add-category" element={<AddCategory />} />
-            <Route path="manage-category" element={<ManageCategories />} />
-            <Route path="edit-category/:id" element={<UpdateCategory />} />
-            {/* brand category */}
-            <Route path="add-brand" element={<AddBrand />} />
-            <Route path="all-brands" element={<BrandsColorsList />} />
-            {/* color category */}
-            <Route path="add-color" element={<AddColor />} />
-            <Route path="all-colors" element={<BrandsColorsList />} />
+            {/* Attributes */}
+            <Route path="add-attribute" element={<AddAttribute />} />
+            <Route path="all-attributes" element={<ManageAttributes />} />
             {/* Orders */}
             <Route path="manage-orders" element={<ManageOrders />} />
             <Route path="order-payment" element={<OrderPayment />} />

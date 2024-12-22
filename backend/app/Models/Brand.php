@@ -9,6 +9,7 @@ class Brand extends Model {
   use HasFactory;
 
   protected $fillable = ['name', 'user_id', 'image'];
+  protected $appends = ['product_count'];
 
   public function products() {
     return $this->hasMany(Product::class);
@@ -16,5 +17,13 @@ class Brand extends Model {
 
   public function user() {
     return $this->belongsTo(User::class);
+  }
+
+  public function getUserNameAttribute() {
+    return $this->user->name ?? null;
+  }
+
+  public function getProductCountAttribute() {
+    return $this->products()->count();
   }
 }

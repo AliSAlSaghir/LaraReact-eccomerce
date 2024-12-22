@@ -153,33 +153,14 @@ const couponsLinks: Link[] = [
   },
 ];
 
-const CategoryLinks: Link[] = [
-  { name: "Add Category", href: "category-to-add", icon: CogIcon },
+const AttributesLinks: Link[] = [
   {
-    name: "Manage Category",
-    href: "manage-category",
+    name: "All Attributes",
+    href: "all-attributes",
     icon: QuestionMarkCircleIcon,
   },
+  { name: "Add Attribute", href: "add-attribute", icon: CogIcon },
 ];
-
-const colorsLinks: Link[] = [
-  { name: "Add New Color", href: "add-color", icon: CogIcon },
-  {
-    name: "All Colors",
-    href: "all-colors",
-    icon: QuestionMarkCircleIcon,
-  },
-];
-
-const brandsLinks: Link[] = [
-  { name: "Add New Brand", href: "add-brand", icon: CogIcon },
-  {
-    name: "All Brands",
-    href: "all-brands",
-    icon: QuestionMarkCircleIcon,
-  },
-];
-
 function classNames(...classes: (string | boolean | null | undefined)[]) {
   return classes.filter(Boolean).join(" ");
 }
@@ -307,43 +288,7 @@ const AdminDashboard: React.FC = () => {
                     {/* Categories mobile */}
                     <div className="pt-3 mt-3">
                       <div className="px-2 space-y-1">
-                        {CategoryLinks.map(item => (
-                          <Link
-                            key={item.name}
-                            to={item.href}
-                            className="flex items-center px-2 py-2 text-sm font-medium leading-6 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
-                          >
-                            <item.icon
-                              className="w-6 h-6 mr-4 text-cyan-200"
-                              aria-hidden="true"
-                            />
-                            {item.name}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                    {/* colors links mobile */}
-                    <div className="pt-3 mt-3">
-                      <div className="px-2 space-y-1">
-                        {colorsLinks.map(item => (
-                          <Link
-                            key={item.name}
-                            to={item.href}
-                            className="flex items-center px-2 py-2 text-sm font-medium leading-6 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
-                          >
-                            <item.icon
-                              className="w-6 h-6 mr-4 text-cyan-200"
-                              aria-hidden="true"
-                            />
-                            {item.name}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                    {/* brands links mobile */}
-                    <div className="pt-3 mt-3">
-                      <div className="px-2 space-y-1">
-                        {brandsLinks.map(item => (
+                        {AttributesLinks.map(item => (
                           <Link
                             key={item.name}
                             to={item.href}
@@ -378,7 +323,7 @@ const AdminDashboard: React.FC = () => {
               aria-label="Sidebar"
             >
               {/* orders links desktop */}
-              <div className="pt-1 mt-1">
+              <div className="pt-1 mt-16">
                 <div className="px-2 space-y-1">
                   {ordersLinks.map(item => (
                     <Link
@@ -437,43 +382,7 @@ const AdminDashboard: React.FC = () => {
               {/* Categories desktop */}
               <div className="pt-3 mt-3">
                 <div className="px-2 space-y-1">
-                  {CategoryLinks.map(item => (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className="flex items-center px-2 py-2 text-sm font-medium leading-6 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
-                    >
-                      <item.icon
-                        className="w-6 h-6 mr-4 text-cyan-200"
-                        aria-hidden="true"
-                      />
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              {/* colors links desktop */}
-              <div className="pt-3 mt-3">
-                <div className="px-2 space-y-1">
-                  {colorsLinks.map(item => (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className="flex items-center px-2 py-2 text-sm font-medium leading-6 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
-                    >
-                      <item.icon
-                        className="w-6 h-6 mr-4 text-cyan-200"
-                        aria-hidden="true"
-                      />
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              {/* brands links desktop */}
-              <div className="pt-3 mt-3">
-                <div className="px-2 space-y-1">
-                  {brandsLinks.map(item => (
+                  {AttributesLinks.map(item => (
                     <Link
                       key={item.name}
                       to={item.href}

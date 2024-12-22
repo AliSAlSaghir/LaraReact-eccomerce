@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -20,23 +21,27 @@ class BrandController extends Controller {
    * Store a newly created resource in storage.
    */
   public function store(Request $request) {
-    // return $request;
     // Validate the request
     $request->validate([
       'name' => 'required|string|max:255|unique:categories,name',
-      'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048'
+      'image' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
     $user = auth('api')->user()->id;
 
+    $imagePath = $request->hasFile('image')
+      ? $request->file('image')->store('images')
+      : "";
+
     $brand = Brand::create([
       'name' => $request->name,
-      'image' => $request->file('image')->store('images'),
+      'image' => $imagePath,
       'user_id' => $user,
     ]);
 
     return response()->json($brand);
   }
+
 
 
   /**
@@ -55,9 +60,9 @@ class BrandController extends Controller {
       'name' => [
         'string',
         'max:255',
-        Rule::unique('categories', 'name')->ignore($brand->id),
+        Rule::unique('brands', 'name')->ignore($brand->id),
       ],
-      'image' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
+      'image' => 'file|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
     $data = [];
@@ -81,6 +86,8 @@ class BrandController extends Controller {
 
     $data['user_id'] = auth('api')->user()->id;
 
+
+    Log::info("hi", $data);
     // Update the brand with the gathered data
     $brand->update($data);
 
