@@ -8,6 +8,7 @@ import {
   ScaleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { useAppSelector } from "../../redux/hooks";
 
 interface Link {
   name: string;
@@ -168,6 +169,7 @@ function classNames(...classes: (string | boolean | null | undefined)[]) {
 const AdminDashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
+  const { userInfo } = useAppSelector(state => state.auth);
   return (
     <>
       <div className="min-h-full">
@@ -421,19 +423,19 @@ const AdminDashboard: React.FC = () => {
                     {/* Profile */}
                     <div className="flex items-center">
                       <img
-                        className="hidden w-16 h-16 rounded-full sm:block"
-                        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2.6&w=256&h=256&q=80"
-                        alt=""
+                        className="hidden w-16 h-16 mt-2 rounded-full sm:block"
+                        src="https://www.pngmart.com/files/21/Admin-Profile-Vector-PNG.png"
+                        alt={userInfo.name}
                       />
                       <div>
                         <div className="flex items-center">
                           <img
                             className="w-16 h-16 rounded-full sm:hidden"
-                            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2.6&w=256&h=256&q=80"
-                            alt=""
+                            src="https://www.pngmart.com/files/21/Admin-Profile-Vector-PNG.png"
+                            alt={userInfo.name}
                           />
                           <h1 className="ml-3 text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:leading-9">
-                            Good morning, Emilia Birch
+                            Good morning, {userInfo.name}
                           </h1>
                         </div>
                         <dl className="flex flex-col mt-6 sm:ml-3 sm:mt-1 sm:flex-row sm:flex-wrap">
@@ -471,7 +473,8 @@ const AdminDashboard: React.FC = () => {
                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                               ></path>
                             </svg>
-                            Date Joined: 12/12/2020
+                            Date Joined:{" "}
+                            {new Date(userInfo.created_at).toLocaleDateString()}
                           </dd>
                           {/* email */}
                           <dd className="flex items-center mt-3 text-sm font-medium text-gray-500 sm:mr-6 sm:mt-0">
@@ -489,7 +492,7 @@ const AdminDashboard: React.FC = () => {
                                 d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
                               ></path>
                             </svg>
-                            admin@gmail.com
+                            {userInfo.email}
                           </dd>
                         </dl>
                       </div>

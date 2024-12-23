@@ -103,3 +103,32 @@ export interface Coupon {
   is_expired: boolean;
   days_left: string;
 }
+
+export interface Order {
+  id: number;
+  user_id: number;
+  shipping_address_id: number;
+  order_number: string;
+  payment_status: "paid" | "unpaid";
+  payment_method: string;
+  total_price: string;
+  currency: string;
+  status: "pending" | "delivered" | "cancelled" | "processing" | "shipped";
+  delivered_at: string | null;
+  created_at: string;
+  updated_at: string;
+  products: OrderProduct[];
+}
+
+interface ProductPivot {
+  order_id: number;
+  product_id: number;
+  quantity: number;
+  price: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderProduct extends Product {
+  pivot: ProductPivot;
+}

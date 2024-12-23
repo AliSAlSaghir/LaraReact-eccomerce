@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
@@ -87,6 +88,8 @@ class OrderController extends Controller {
 
       // Check if the coupon is provided in the query string
       $couponCode = $request->query('coupon');
+      Log::info('Coupon code received: ' . $request);
+
       if ($couponCode) {
         $coupon = Coupon::where('code', strtoupper($couponCode))
           ->where('start_date', '<=', now())
