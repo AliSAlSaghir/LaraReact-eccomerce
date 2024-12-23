@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class AdminOrderController extends Controller {
@@ -38,9 +39,8 @@ class AdminOrderController extends Controller {
    */
   public function updateOrdersStatus(Request $request, $orderIds) {
     $validated = $request->validate([
-      'status' => 'required|string|in:pending,processing,shipped,delivered'
+      'status' => 'required|string|in:pending,processing,shipped,delivered,cancelled'
     ]);
-
     try {
       DB::beginTransaction();
 

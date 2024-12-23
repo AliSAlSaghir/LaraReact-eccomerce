@@ -16,11 +16,11 @@ return new class extends Migration {
       $table->foreignIdFor(User::class)->cascadeOnDelete();
       $table->foreignIdFor(ShippingAddress::class)->cascadeOnDelete();
       $table->string('order_number')->unique();
-      $table->string('payment_status')->default('Not paid');
+      $table->enum('payment_status', ['paid', 'unpaid'])->default('unpaid');
       $table->string('payment_method')->default('Not specified');
       $table->decimal('total_price', 8, 2)->default(0.00);
       $table->string('currency')->default('Not specified');
-      $table->enum('status', ['pending', 'processing', 'shipped', 'delivered'])->default('pending');
+      $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])->default('pending');
       $table->datetime('delivered_at')->nullable();
       $table->timestamps();
     });
