@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Navbar from "./components/Navbar/Navbar";
-import OrdersList from "./components/Admin/Orders/OdersList";
+import OrdersList from "./components/Admin/Orders/OrdersList";
 import AddProduct from "./components/Admin/Products/AddProduct";
 import ManageStocks from "./components/Admin/Products/ManageStocks";
 import UpdateProduct from "./components/Admin/Products/UpdateProduct";
@@ -50,7 +50,7 @@ const App: React.FC = () => {
         {/* nested route */}
         <Route element={<AdminRoute />}>
           <Route path="admin" element={<AdminDashboard />}>
-            {/* products */} <Route path="" element={<OrdersList />} />
+            {/* products */}
             <Route path="add-product" element={<AddProduct />} />
             <Route path="manage-products" element={<ManageStocks />} />
             <Route path="products/edit/:id" element={<UpdateProduct />} />
@@ -65,6 +65,7 @@ const App: React.FC = () => {
             <Route path="add-attribute" element={<AddAttribute />} />
             <Route path="all-attributes" element={<ManageAttributes />} />
             {/* Orders */}
+            <Route path="" element={<OrdersList />} />
             <Route path="manage-orders" element={<ManageOrders />} />
             <Route path="order-payment" element={<OrderPayment />} />
             <Route path="customers" element={<Customers />} />

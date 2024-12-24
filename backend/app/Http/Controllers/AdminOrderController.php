@@ -102,9 +102,15 @@ class AdminOrderController extends Controller {
     $saleToday = Order::where('created_at', '>=', $today)
       ->sum('total_price');
 
+    // Get order count by status
+    $orderStatusCounts = Order::selectRaw('status, COUNT(*) as count')
+      ->groupBy('status')
+      ->pluck('count', 'status'); // Returns a key-value pair with status as key and count as value
+
     return response()->json([
       'orders' => $orderStats,
       'saleToday' => number_format($saleToday, 2),
+      'statusCounts' => $orderStatusCounts,
     ], 200);
   }
 }

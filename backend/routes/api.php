@@ -12,6 +12,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ShippingAddressController;
 use App\Http\Controllers\SizeController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/webhook', [StripeWebhookController::class, 'handleWebhook']);
@@ -75,5 +76,7 @@ Route::middleware(['cookie.auth', 'role:admin'])->group(function () {
     Route::get('orders/getOrderStats', [AdminOrderController::class, 'getOrderStats']);
     Route::apiResource('orders', AdminOrderController::class)->except(['store', 'update']);
     Route::put('orders/{order}/updateOrdersStatus', [AdminOrderController::class, 'updateOrdersStatus']);
+
+    Route::get('users', [UserController::class, 'index']);
   });
 });

@@ -23,3 +23,5 @@ export const ADMIN_COUPONS_URL = "http://localhost:8000/api/admin/coupons";
 
 export const ORDERS_URL = "http://localhost:8000/api/orders";
 export const ADMIN_ORDERS_URL = "http://localhost:8000/api/admin/orders";
+
+export const USERS_URL = "http://localhost:8000/api/admin/users";

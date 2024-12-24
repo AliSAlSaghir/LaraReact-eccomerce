@@ -75,4 +75,14 @@ class User extends Authenticatable implements JWTSubject {
   public function shippingAddress() {
     return $this->hasOne(ShippingAddress::class, 'id', 'shipping_address_id');
   }
+
+  public function getOrdersCountAttribute() {
+    return $this->orders()->count();
+  }
+
+  public function getTotalMoneyPaidAttribute() {
+    return $this->orders()
+      ->where('payment_status', 'paid')
+      ->sum('total_price');
+  }
 }
