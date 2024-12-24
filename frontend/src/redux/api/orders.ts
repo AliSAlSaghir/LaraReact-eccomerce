@@ -54,6 +54,10 @@ const ordersApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Order"],
     }),
+    getOrderStats: builder.query<any, void>({
+      query: () => `${ADMIN_ORDERS_URL}/getOrderStats`,
+      providesTags: ["Order"],
+    }),
   }),
 });
 
@@ -64,4 +68,5 @@ export const {
   useGetOrderQuery,
   useUpdateOrderMutation,
   useUpdateOrdersStatusMutation,
+  useGetOrderStatsQuery,
 } = ordersApiSlice;

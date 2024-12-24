@@ -61,8 +61,7 @@ const ManageStocks: React.FC = () => {
             Product List- [{length.current}]{" "}
           </h1>
           <p className="mt-2 text-sm text-gray-700">
-            List of all the products in your account including their name,
-            title,
+            List of all the products in your system,
           </p>
         </div>
         <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">

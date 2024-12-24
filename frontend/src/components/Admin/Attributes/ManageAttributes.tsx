@@ -160,7 +160,7 @@ export default function ManageAttributes() {
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-xl font-semibold text-gray-900">
-            All Categories
+            All Attributes
           </h1>
           <p className="mt-2 text-sm text-gray-700">
             A list of all categories, brands, sizes, and colors in your account.
