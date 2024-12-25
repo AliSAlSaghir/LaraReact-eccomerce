@@ -1,5 +1,5 @@
 import { ADMIN_PRODUCTS_URL, PRODUCTS_URL } from "../constants";
-import { Product } from "../types";
+import { Product, Review } from "../types";
 import apiSlice from "./apiSlice";
 
 interface ProductsResponse {
@@ -34,10 +34,12 @@ const productsApiSlice = apiSlice.injectEndpoints({
   endpoints: builder => ({
     getProducts: builder.query<ProductsResponse, string>({
       query: query => `${PRODUCTS_URL}${query}`,
+      providesTags: ["Review"],
       transformResponse: (response: ProductsResponse) => response,
     }),
     getProduct: builder.query<ProductResponse, string>({
       query: id => `${PRODUCTS_URL}/${id}`,
+      providesTags: ["Review"],
     }),
     addProduct: builder.mutation<Product, Partial<Product>>({
       query: newProduct => ({
@@ -62,6 +64,17 @@ const productsApiSlice = apiSlice.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    addReview: builder.mutation<
+      Review,
+      { newReview: Partial<Review>; id: string }
+    >({
+      query: ({ newReview, id }) => ({
+        url: `${PRODUCTS_URL}/${id}/reviews`,
+        method: "POST",
+        body: newReview,
+      }),
+      invalidatesTags: ["Review"],
+    }),
   }),
 });
 
@@ -72,4 +85,5 @@ export const {
   useAddProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
+  useAddReviewMutation,
 } = productsApiSlice;

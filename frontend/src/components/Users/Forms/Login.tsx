@@ -36,7 +36,7 @@ const Login: React.FC = () => {
   const onChangeHandler = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value.trim() });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   //---onsubmit handler----
@@ -56,13 +56,13 @@ const Login: React.FC = () => {
 
   return (
     <>
-      <section className="py-20 bg-gray-100 overflow-x-hidden">
-        <div className="relative container px-4 mx-auto">
-          <div className="absolute inset-0 bg-blue-200 my-24 -ml-4" />
+      <section className="py-20 overflow-x-hidden bg-gray-100">
+        <div className="container relative px-4 mx-auto">
+          <div className="absolute inset-0 my-24 -ml-4 bg-blue-200" />
           <div className="relative flex flex-wrap bg-white">
-            <div className="w-full md:w-4/6 px-4">
-              <div className="lg:max-w-3xl mx-auto py-20 px-4 md:px-10 lg:px-20">
-                <h3 className="mb-8 text-4xl md:text-5xl font-bold font-heading">
+            <div className="w-full px-4 md:w-4/6">
+              <div className="px-4 py-20 mx-auto lg:max-w-3xl md:px-10 lg:px-20">
+                <h3 className="mb-8 text-4xl font-bold md:text-5xl font-heading">
                   Login to your account
                 </h3>
                 <p className="mb-10 font-semibold font-heading">
@@ -72,30 +72,30 @@ const Login: React.FC = () => {
                   className="flex flex-wrap -mx-4"
                   onSubmit={onSubmitHandler}
                 >
-                  <div className="w-full md:w-1/2 px-4 mb-8 md:mb-12">
+                  <div className="w-full px-4 mb-8 md:w-1/2 md:mb-12">
                     <label>
-                      <h4 className="mb-5 text-gray-400 uppercase font-bold font-heading">
+                      <h4 className="mb-5 font-bold text-gray-400 uppercase font-heading">
                         Your Email
                       </h4>
                       <input
                         name="email"
                         value={email}
                         onChange={onChangeHandler}
-                        className="p-5 w-full border border-gray-200 focus:ring-blue-300 focus:border-blue-300 rounded-md"
+                        className="w-full p-5 border border-gray-200 rounded-md focus:ring-blue-300 focus:border-blue-300"
                         type="text"
                       />
                     </label>
                   </div>
-                  <div className="w-full md:w-1/2 px-4 mb-12">
+                  <div className="w-full px-4 mb-12 md:w-1/2">
                     <label>
-                      <h4 className="mb-5 text-gray-400 uppercase font-bold font-heading">
+                      <h4 className="mb-5 font-bold text-gray-400 uppercase font-heading">
                         Password
                       </h4>
                       <input
                         name="password"
                         value={password}
                         onChange={onChangeHandler}
-                        className="p-5 w-full border border-gray-200 focus:ring-blue-300 focus:border-blue-300 rounded-md"
+                        className="w-full p-5 border border-gray-200 rounded-md focus:ring-blue-300 focus:border-blue-300"
                         type="password"
                         // minLength={6}
                       />
@@ -104,7 +104,7 @@ const Login: React.FC = () => {
 
                   <div className="w-full px-4">
                     <button
-                      className="bg-blue-800 hover:bg-blue-900 text-white font-bold font-heading py-5 px-8 rounded-md uppercase"
+                      className="px-8 py-5 font-bold text-white uppercase bg-blue-800 rounded-md hover:bg-blue-900 font-heading"
                       disabled={isLoading}
                     >
                       {isLoading ? <LoadingComponent /> : "Login"}
@@ -114,7 +114,7 @@ const Login: React.FC = () => {
               </div>
             </div>
             <div
-              className="w-full md:w-2/6 h-128 md:h-auto flex items-center lg:items-end px-4 pb-20 bg-cover bg-no-repeat"
+              className="flex items-center w-full px-4 pb-20 bg-no-repeat bg-cover md:w-2/6 h-128 md:h-auto lg:items-end"
               style={{
                 backgroundImage:
                   'url("https://cdn.pixabay.com/photo/2017/03/29/04/47/high-heels-2184095_1280.jpg")',

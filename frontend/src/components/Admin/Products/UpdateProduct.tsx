@@ -91,7 +91,7 @@ export default function UpdateProduct() {
   const handleOnChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value.trim() });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleColorChange = (selectedOptions: Options[] | null) => {
@@ -156,7 +156,6 @@ export default function UpdateProduct() {
     });
 
     try {
-      console.log({ updatedProduct: formDataToSend, id });
       await updateProduct({
         updatedProduct: formDataToSend as any,
         id,
@@ -213,16 +212,17 @@ export default function UpdateProduct() {
                 <Select
                   components={animatedComponents}
                   isMulti
-                  name="size_id"
-                  options={sizeOptions}
-                  value={formData.size_id}
+                  name="color_id"
+                  options={colorOptions}
+                  value={colorOptions?.filter(option =>
+                    formData.color_id.includes(option.value)
+                  )}
                   className="basic-multi-select"
                   classNamePrefix="select"
                   isClearable={true}
-                  isLoading={false}
                   isSearchable={true}
                   closeMenuOnSelect={false}
-                  onChange={(item: Options[]) => handleSizeChange(item)}
+                  onChange={handleColorChange}
                 />
               </div>
               {/* Select category */}
@@ -276,16 +276,17 @@ export default function UpdateProduct() {
                 <Select
                   components={animatedComponents}
                   isMulti
-                  name="color_id"
-                  options={colorOptions}
-                  value={formData.color_id}
+                  name="size_id"
+                  options={sizeOptions}
+                  value={sizeOptions?.filter(option =>
+                    formData.size_id.includes(option.value)
+                  )}
                   className="basic-multi-select"
                   classNamePrefix="select"
                   isClearable={true}
-                  isLoading={false}
                   isSearchable={true}
                   closeMenuOnSelect={false}
-                  onChange={(item: Options[]) => handleColorChange(item)}
+                  onChange={handleSizeChange}
                 />
               </div>
 

@@ -69,7 +69,10 @@ export default function AddProduct() {
   const handleOnChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value.trim() });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleColorChange = (selectedOptions: Options[] | null) => {

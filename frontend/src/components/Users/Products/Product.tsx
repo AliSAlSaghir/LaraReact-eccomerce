@@ -12,12 +12,12 @@ const policies = [
   {
     name: "International delivery",
     icon: GlobeAmericasIcon,
-    description: "Get your order in 2 years",
+    description: "Get your order in 2 weeks",
   },
   {
     name: "Loyalty rewards",
     icon: CurrencyDollarIcon,
-    description: "Don't look at other tees",
+    description: "Don't look at other fees",
   },
 ];
 
@@ -44,27 +44,38 @@ export default function Product() {
         <div className="lg:grid lg:auto-rows-min lg:grid-cols-12 lg:gap-x-8">
           <div className="lg:col-span-5 lg:col-start-8">
             <div className="flex justify-between">
-              <h1 className="text-xl font-medium text-gray-900">
+              <h1 className="text-2xl font-bold text-gray-900">
                 {product?.name}
               </h1>
               <p className="text-xl font-medium text-gray-900">
-                $ {product?.price}.00
+                ${product?.price}
               </p>
             </div>
+
+            {/* Stock Status */}
+            <div className="mt-2">
+              {product?.total_qty - product?.total_sold > 0 ? (
+                <p className="text-sm font-medium text-green-600">In Stock</p>
+              ) : (
+                <p className="text-sm font-medium text-red-600">Out of Stock</p>
+              )}
+            </div>
+
             {/* Reviews */}
             <div className="mt-4">
               <h2 className="sr-only">Reviews</h2>
               <div className="flex items-center">
                 <p className="text-sm text-gray-700">
-                  {product?.average_rating}
-                  <span className="sr-only"> out of 5 stars</span>
+                  {product?.reviews?.length > 0
+                    ? product?.average_rating.toFixed(1)
+                    : 0}
                 </p>
                 <div className="flex items-center ml-1">
                   {[0, 1, 2, 3, 4].map(rating => (
                     <StarIcon
                       key={rating}
                       className={classNames(
-                        product?.average_rating > rating
+                        +product?.average_rating > rating
                           ? "text-yellow-400"
                           : "text-gray-200",
                         "h-5 w-5 flex-shrink-0"
@@ -75,22 +86,19 @@ export default function Product() {
                 </div>
                 <div
                   aria-hidden="true"
-                  className="ml-4 text-sm text-gray-300"
+                  className="ml-1 text-sm text-gray-300"
                 ></div>
                 <div className="flex ml-4">
-                  <a
-                    href="#"
-                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                  >
-                    {product?.total_reviews} total reviews
-                  </a>
+                  <span className="text-sm italic font-medium text-gray-600">
+                    from {product?.total_reviews} total reviews
+                  </span>
                 </div>
               </div>
-              {/* leave a review */}
 
+              {/* Leave a Review */}
               <div className="mt-4">
                 <Link to={`/add-review/${product?.id}`}>
-                  <h3 className="text-sm font-medium text-blue-600">
+                  <h3 className="text-sm font-medium text-blue-600 hover:underline">
                     Leave a review
                   </h3>
                 </Link>
@@ -98,24 +106,28 @@ export default function Product() {
             </div>
           </div>
 
-          {/* Image gallery */}
+          {/* Image Gallery */}
           <div className="mt-8 lg:col-span-7 lg:col-start-1 lg:row-span-3 lg:row-start-1 lg:mt-0">
             <h2 className="sr-only">Images</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-4">
+              {/* Large Image */}
+              <img
+                src={`http://localhost:8000/${product?.images[0]}`}
+                alt="Primary product image"
+                className="object-cover w-full h-auto rounded-lg lg:h-auto"
+              />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-3 lg:gap-8">
-              {product.images.map(image => (
-                <img
-                  key={image.id}
-                  src={image.imageSrc}
-                  alt={image.imageAlt}
-                  className={classNames(
-                    image.primary
-                      ? "lg:col-span-2 lg:row-span-2"
-                      : "hidden lg:block",
-                    "rounded-lg"
-                  )}
-                />
-              ))}
+              {/* Small Images */}
+              <div className="flex flex-col gap-2">
+                {product?.images.slice(1).map((image, index) => (
+                  <img
+                    key={index}
+                    src={`http://localhost:8000/${image}`}
+                    alt={`Product image ${index + 2}`}
+                    className="flex-1 object-cover w-full rounded-lg"
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
@@ -127,7 +139,7 @@ export default function Product() {
                 <div className="flex items-center space-x-3">
                   <RadioGroup value={selectedColor} onChange={setSelectedColor}>
                     <div className="flex items-center mt-4 space-x-3">
-                      {productColor?.map(color => (
+                      {product?.colors?.map(color => (
                         <RadioGroup.Option
                           key={color}
                           value={color}
@@ -140,7 +152,7 @@ export default function Product() {
                           }
                         >
                           <RadioGroup.Label as="span" className="sr-only">
-                            {color.name}
+                            {color}
                           </RadioGroup.Label>
                           <span
                             style={{ backgroundColor: color }}
@@ -168,7 +180,7 @@ export default function Product() {
                 >
                   {/* Choose size */}
                   <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-                    {productSize?.map(size => (
+                    {product?.sizes?.map(size => (
                       <RadioGroup.Option
                         key={size}
                         value={size}
@@ -188,12 +200,22 @@ export default function Product() {
                 </RadioGroup>
               </div>
               {/* add to cart */}
-              <button
-                onClick={() => addToCartHandler()}
-                className="flex items-center justify-center w-full px-8 py-3 mt-8 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-              >
-                Add to cart
-              </button>
+              {product?.quantity <= 0 ? (
+                <button
+                  style={{ cursor: "not-allowed" }}
+                  disabled
+                  className="flex items-center justify-center w-full px-8 py-3 mt-8 text-base font-medium bg-gray-600 border border-transparent rounded-md text-whitefocus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  Add to cart
+                </button>
+              ) : (
+                <button
+                  onClick={() => addToCartHandler(1)}
+                  className="flex items-center justify-center w-full px-8 py-3 mt-8 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  Add to cart
+                </button>
+              )}
               {/* proceed to check */}
 
               {cartItems.length > 0 && (
@@ -257,7 +279,7 @@ export default function Product() {
           <div className="pb-10 mt-6 space-y-10 border-t border-b border-gray-200 divide-y divide-gray-200">
             {product?.reviews.map(review => (
               <div
-                key={review._id}
+                key={review.id}
                 className="pt-10 lg:grid lg:grid-cols-12 lg:gap-x-8"
               >
                 <div className="lg:col-span-8 lg:col-start-5 xl:col-span-9 xl:col-start-4 xl:grid xl:grid-cols-3 xl:items-start xl:gap-x-8">
@@ -286,21 +308,16 @@ export default function Product() {
                     <h3 className="text-sm font-medium text-gray-900">
                       {review?.message}
                     </h3>
-
-                    <div
-                      className="mt-3 space-y-6 text-sm text-gray-500"
-                      dangerouslySetInnerHTML={{ __html: review.content }}
-                    />
                   </div>
                 </div>
 
                 <div className="flex items-center mt-6 text-sm lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:mt-0 lg:flex-col lg:items-start xl:col-span-3">
-                  <p className="font-medium text-gray-900">{review.author}</p>
+                  <p className="font-medium text-gray-900">{review.user_id}</p>
                   <time
-                    dateTime={review.datetime}
+                    dateTime={review.created_at}
                     className="pl-4 ml-4 text-gray-500 border-l border-gray-200 lg:ml-0 lg:mt-2 lg:border-0 lg:pl-0"
                   >
-                    {review.date}
+                    {new Date(review.created_at).toLocaleDateString()}
                   </time>
                 </div>
               </div>

@@ -88,7 +88,6 @@ class OrderController extends Controller {
 
       // Check if the coupon is provided in the query string
       $couponCode = $request->query('coupon');
-      Log::info('Coupon code received: ' . $request);
 
       if ($couponCode) {
         $coupon = Coupon::where('code', strtoupper($couponCode))

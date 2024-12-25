@@ -32,7 +32,7 @@ class ReviewController extends Controller {
 
     $request->validate([
       'message' => 'required|string',
-      'rating' => 'required|integer|between:1,5',
+      'rating' => 'required|numeric|between:1,5',
     ]);
 
     $review = Review::create([
@@ -65,7 +65,7 @@ class ReviewController extends Controller {
   public function update(Request $request, Product $product, Review $review) {
     $request->validate([
       'message' => 'string',
-      'rating' => 'integer|between:1,5',
+      'rating' => 'numeric|between:1,5',
     ]);
 
     $result = $this->checkIfReviewBelongToProduct($review, $product);

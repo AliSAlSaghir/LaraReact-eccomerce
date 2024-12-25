@@ -4,7 +4,6 @@ import { useGetProductsQuery } from "../../redux/api/products";
 const HomeProductTrending = () => {
   const { data: productsResponse } = useGetProductsQuery("?page=1");
   const trendingProducts = productsResponse?.data || [];
-  console.log(trendingProducts);
   return (
     <>
       <section aria-labelledby="trending-heading">

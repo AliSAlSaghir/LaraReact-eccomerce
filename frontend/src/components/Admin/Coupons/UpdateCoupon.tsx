@@ -46,7 +46,7 @@ export default function UpdateCoupon() {
   const handleOnChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value.trim() });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
   //onHandleSubmit---
   const handleOnSubmit = async (e: FormEvent<HTMLFormElement>) => {
