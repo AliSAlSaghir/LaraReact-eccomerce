@@ -18,6 +18,7 @@ class Order extends Model {
     'currency',
     'status',
     'delivered_at',
+    'applied_coupon_id',
   ];
 
   protected static function boot() {
@@ -35,8 +36,8 @@ class Order extends Model {
   }
 
   public function products() {
-    return $this->belongsToMany(Product::class, 'order_product')
-      ->withPivot('quantity', 'price')
+    return $this->belongsToMany(Product::class)
+      ->withPivot('quantity', 'price', 'color', 'size')
       ->withTimestamps();
   }
 }

@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Dialog, Popover, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
@@ -10,15 +10,43 @@ import { Link } from "react-router-dom";
 import logo from "./logo3.png";
 import { useGetCategoriesQuery } from "../../redux/api/categories";
 import { useAppSelector } from "../../redux/hooks";
+import { useGetCouponsQuery } from "../../redux/api/coupons";
 
 const Navbar: React.FC = () => {
   const { data: categories } = useGetCategoriesQuery();
+  const { data: coupons } = useGetCouponsQuery();
+
+  const bestCoupon = useMemo(() => {
+    if (!coupons) return null;
+    const today = new Date();
+    return (
+      coupons
+        // Filter coupons based on conditions
+        .filter(coupon => {
+          const startDate = new Date(coupon.start_date);
+          const endDate = new Date(coupon.end_date);
+          return (
+            startDate < today && // Start date is less than today
+            endDate > today && // Not expired
+            coupon.days_left &&
+            parseInt(coupon.days_left, 10) > 0 // Days left is greater than 0
+          );
+        })
+        // Sort by expiration date in descending order
+        .sort(
+          (a, b) =>
+            new Date(b.end_date).getTime() - new Date(a.end_date).getTime()
+        )[0] // Get the first (largest) coupon
+    );
+  }, [coupons]);
+
   const { userInfo } = useAppSelector(state => state.auth);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
   //get cart items from local storage
-  const cartItemsFromLocalStorage = [];
+  const cartItems = useAppSelector(state => state.cart.products);
+
   return (
     <div className="bg-white">
       {/* Mobile menu */}
@@ -50,24 +78,24 @@ const Navbar: React.FC = () => {
               leaveFrom="translate-x-0"
               leaveTo="-translate-x-full"
             >
-              <Dialog.Panel className="relative flex w-full max-w-xs flex-col overflow-y-auto bg-white pb-12 shadow-xl">
+              <Dialog.Panel className="relative flex flex-col w-full max-w-xs pb-12 overflow-y-auto bg-white shadow-xl">
                 <div className="flex px-4 pt-5 pb-2">
                   <button
                     type="button"
-                    className="-m-2 inline-flex items-center justify-center rounded-md p-2 text-gray-400"
+                    className="inline-flex items-center justify-center p-2 -m-2 text-gray-400 rounded-md"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <span className="sr-only">Close menu</span>
-                    <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                    <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                   </button>
                 </div>
                 {/* mobile category menu links */}
-                <div className="space-y-6 border-t border-gray-200 py-6 px-4">
+                <div className="px-4 py-6 space-y-6 border-t border-gray-200">
                   {/* {navigation.pages.map((page) => (
                     <div key={page.name} className="flow-root">
                       <a
                         href={page.href}
-                        className="-m-2 block p-2 font-medium text-gray-900">
+                        className="block p-2 -m-2 font-medium text-gray-900">
                         {page.name}
                       </a>
                     </div>
@@ -88,11 +116,11 @@ const Navbar: React.FC = () => {
 
                 {/* mobile links register/login */}
                 {!userInfo && (
-                  <div className="space-y-6 border-t border-gray-200 py-6 px-4">
+                  <div className="px-4 py-6 space-y-6 border-t border-gray-200">
                     <div className="flow-root">
                       <Link
                         to="/register"
-                        className="-m-2 block p-2 font-medium text-gray-900"
+                        className="block p-2 -m-2 font-medium text-gray-900"
                       >
                         Create an account
                       </Link>
@@ -100,7 +128,7 @@ const Navbar: React.FC = () => {
                     <div className="flow-root">
                       <Link
                         to="/login"
-                        className="-m-2 block p-2 font-medium text-gray-900"
+                        className="block p-2 -m-2 font-medium text-gray-900"
                       >
                         Sign in
                       </Link>
@@ -108,7 +136,7 @@ const Navbar: React.FC = () => {
                   </div>
                 )}
 
-                <div className="space-y-6 border-t border-gray-200 py-6 px-4"></div>
+                <div className="px-4 py-6 space-y-6 border-t border-gray-200"></div>
               </Dialog.Panel>
             </Transition.Child>
           </div>
@@ -118,13 +146,25 @@ const Navbar: React.FC = () => {
       <header className="relative z-10">
         <nav aria-label="Top">
           {/* Top navigation  desktop*/}
-          <div className="bg-gray-900">
-            <div className="mx-auto flex h-10 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-              <p className="flex-1 text-center text-sm font-medium text-white lg:flex-none">
-                Get free delivery on orders over $100
-              </p>
+          {bestCoupon && !bestCoupon?.is_expired && (
+            <div className="bg-yellow-600">
+              <div className="flex items-center justify-between h-10 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <p
+                  style={{ textAlign: "center", width: "100%" }}
+                  className="flex-1 text-sm font-medium text-center text-white lg:flex-none"
+                >
+                  {bestCoupon
+                    ? `${bestCoupon?.code}- ${bestCoupon?.discount}% , ${bestCoupon?.days_left}`
+                    : "No Flash Sale at the Moment"}
+                </p>
 
-              {!userInfo && (
+                <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6"></div>
+              </div>
+            </div>
+          )}
+          {!userInfo && (
+            <div className="bg-gray-900">
+              <div className="flex items-center justify-between h-10 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
                   <Link
                     to="/register"
@@ -132,7 +172,7 @@ const Navbar: React.FC = () => {
                   >
                     Create an account
                   </Link>
-                  <span className="h-6 w-px bg-gray-600" aria-hidden="true" />
+                  <span className="w-px h-6 bg-gray-600" aria-hidden="true" />
                   <Link
                     to="/login"
                     className="text-sm font-medium text-white hover:text-gray-100"
@@ -140,21 +180,21 @@ const Navbar: React.FC = () => {
                     Sign in
                   </Link>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Deskto Navigation */}
           <div className="bg-white">
             <div className="border-b border-gray-200">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex h-16 items-center justify-between">
+              <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-16">
                   {/* Logo (lg+) */}
                   <div className="hidden lg:flex lg:items-center">
                     <Link to="/">
                       <span className="sr-only">Your Company</span>
                       <img
-                        className="h-32 pt-2 w-auto"
+                        className="w-auto h-32 pt-2"
                         src={logo}
                         alt="i-novotek logo"
                       />
@@ -164,7 +204,7 @@ const Navbar: React.FC = () => {
                   <div className="hidden h-full lg:flex">
                     {/*  menus links*/}
                     <Popover.Group className="ml-8">
-                      <div className="flex h-full justify-center space-x-8">
+                      <div className="flex justify-center h-full space-x-8">
                         {categories?.map(category => {
                           return (
                             <Link
@@ -181,37 +221,37 @@ const Navbar: React.FC = () => {
                   </div>
 
                   {/* Mobile Naviagtion */}
-                  <div className="flex flex-1 items-center lg:hidden">
+                  <div className="flex items-center flex-1 lg:hidden">
                     <button
                       type="button"
-                      className="-ml-2 rounded-md bg-white p-2 text-gray-400"
+                      className="p-2 -ml-2 text-gray-400 bg-white rounded-md"
                       onClick={() => setMobileMenuOpen(true)}
                     >
                       <span className="sr-only">Open menu</span>
-                      <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+                      <Bars3Icon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   </div>
                   {/* logo */}
                   <Link to="/" className="lg:hidden">
                     <img
-                      className="h-32 mt-2 w-auto"
+                      className="w-auto h-32 mt-2"
                       src={logo}
                       alt="i-novotek logo"
                     />
                   </Link>
 
                   {/* login profile icon mobile */}
-                  <div className="flex flex-1 items-center justify-end">
+                  <div className="flex items-center justify-end flex-1">
                     <div className="flex items-center lg:ml-8">
                       {userInfo && (
                         <div className="flex space-x-8">
                           <div className="flex">
                             <Link
                               to="/customer-profile"
-                              className="-m-2 p-2 text-gray-400 hover:text-gray-500"
+                              className="p-2 -m-2 text-gray-400 hover:text-gray-500"
                             >
                               <UserIcon
-                                className="h-6 w-6"
+                                className="w-6 h-6"
                                 aria-hidden="true"
                               />
                             </Link>
@@ -220,23 +260,21 @@ const Navbar: React.FC = () => {
                       )}
 
                       <span
-                        className="mx-4 h-6 w-px bg-gray-200 lg:mx-6"
+                        className="w-px h-6 mx-4 bg-gray-200 lg:mx-6"
                         aria-hidden="true"
                       />
                       {/* login shopping cart mobile */}
                       <div className="flow-root">
                         <Link
                           to="/shopping-cart"
-                          className="group -m-2 flex items-center p-2"
+                          className="flex items-center p-2 -m-2 group"
                         >
                           <ShoppingCartIcon
-                            className="h-6 w-6 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
+                            className="flex-shrink-0 w-6 h-6 text-gray-400 group-hover:text-gray-500"
                             aria-hidden="true"
                           />
                           <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
-                            {cartItemsFromLocalStorage?.length > 0
-                              ? cartItemsFromLocalStorage.length
-                              : 0}
+                            {cartItems?.length > 0 ? cartItems.length : 0}
                           </span>
                         </Link>
                       </div>

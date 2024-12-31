@@ -1,218 +1,205 @@
-import React, { useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
+import { useGetMeQuery } from "../../../redux/api/auth";
+import { ShippingAddress } from "../../../redux/types";
+import { useCreateShippingAddressMutation } from "../../../redux/api/shippingAddress";
+import { ErrorResponse } from "react-router-dom";
+import { toast } from "react-toastify";
+import { countries } from "countries-list"; // Correct import
+import Select from "react-select";
 
 const AddShippingAddress = () => {
   //user profile
-  const { user } = {};
+  const { data: user, refetch } = useGetMeQuery();
 
-  const [formData, setFormData] = useState({
-    firstName: user?.shippingAddress?.firstName,
-    lastName: "",
+  const [createShippingAddress] = useCreateShippingAddressMutation();
+
+  const [formData, setFormData] = useState<Partial<ShippingAddress>>({
+    first_name: "",
+    last_name: "",
     address: "",
     city: "",
     country: "",
-    region: "",
-    postalCode: "",
+    province: "",
+    postal_code: "",
     phone: "",
   });
-  //onchange
-  const onChange = (e) => {
+
+  const countryOptions = Object.entries(countries).map(([code, details]) => ({
+    value: details.name,
+    label: details.name,
+  }));
+
+  const handleOnChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleCountryChange = (selectedOption: any) => {
+    setFormData({ ...formData, country: selectedOption?.value || "" });
+  };
+
   //onsubmit
-  const onSubmit = (e) => {
+  const handleOnSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    try {
+      await createShippingAddress(formData).unwrap();
+      toast.success("Shipping address created successfully!");
+      // Optionally reset formData
+      setFormData({
+        first_name: "",
+        last_name: "",
+        address: "",
+        city: "",
+        country: "",
+        province: "",
+        postal_code: "",
+        phone: "",
+      });
+      refetch();
+    } catch (error) {
+      const err = error as ErrorResponse;
+      console.error(err);
+      toast.error(
+        err?.data?.message ||
+          "Failed to create shipping address. Please try again."
+      );
+    }
   };
 
   return (
     <>
-      {/* shipping details */}
-      {user?.hasShippingAddress ? (
+      {/* Shipping details */}
+      {user?.shipping_address_id !== null ? (
         <div className="mt-6">
           <h3 className="text-lg font-medium text-gray-900">
-            Shipping details
+            Shipping Details
           </h3>
-
           <p className="mt-1 text-sm text-gray-500">
-            Double check your information.
+            Double-check your information:
           </p>
-          <div>
-            <p className="mt-1 text-sm text-gray-500">
-              First Name : {user?.shippingAddress?.firstName}
+          <div className="mt-4 space-y-2">
+            <p className="text-sm text-gray-700">
+              <strong>First Name:</strong> {user?.shipping_address?.first_name}
             </p>
-            <p className="mt-1 text-sm text-gray-500">
-              Last Name : {user?.shippingAddress?.lastName}
+            <p className="text-sm text-gray-700">
+              <strong>Last Name:</strong> {user?.shipping_address?.last_name}
             </p>
-            <p className="mt-1 text-sm text-gray-500">
-              Address : {user?.shippingAddress?.address}
+            <p className="text-sm text-gray-700">
+              <strong>Address:</strong> {user?.shipping_address?.address}
             </p>
-            <p className="mt-1 text-sm text-gray-500">
-              City : {user?.shippingAddress?.city}
+            <p className="text-sm text-gray-700">
+              <strong>City:</strong> {user?.shipping_address?.city}
             </p>
-            <p className="mt-1 text-sm text-gray-500">
-              Country : {user?.shippingAddress?.country}
+            <p className="text-sm text-gray-700">
+              <strong>Country:</strong> {user?.shipping_address?.country}
             </p>
-            <p className="mt-1 text-sm text-gray-500">
-              phone : {user?.shippingAddress?.phone}
+            <p className="text-sm text-gray-700">
+              <strong>Phone:</strong> {user?.shipping_address?.phone}
             </p>
           </div>
         </div>
       ) : (
         <form
-          onSubmit={onSubmit}
-          className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
-          <div>
-            <label
-              htmlFor="first-name"
-              className="block text-sm font-medium text-gray-700">
-              First name
-            </label>
-            <div className="mt-1">
-              <input
-                type="text"
-                name="firstName"
-                onChange={onChange}
-                value={formData.firstName}
-                autoComplete="given-name"
-                className="block w-full rounded-md border-gray-300  p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
+          onSubmit={handleOnSubmit}
+          className="grid grid-cols-1 mt-6 gap-y-6 sm:grid-cols-2 sm:gap-x-4"
+        >
+          {[
+            {
+              label: "First name",
+              name: "first_name",
+              value: formData.first_name,
+            },
+            {
+              label: "Last name",
+              name: "last_name",
+              value: formData.last_name,
+            },
+            {
+              label: "Address",
+              name: "address",
+              value: formData.address,
+              fullWidth: true,
+            },
+            { label: "City", name: "city", value: formData.city },
+            {
+              label: "State / Province",
+              name: "province",
+              value: formData.province,
+            },
+            {
+              label: "Postal code",
+              name: "postal_code",
+              value: formData.postal_code,
+            },
+            {
+              label: "Phone",
+              name: "phone",
+              value: formData.phone,
+              fullWidth: true,
+            },
+          ].map((field, index) => (
+            <div key={index} className={field.fullWidth ? "sm:col-span-2" : ""}>
+              <label
+                htmlFor={field.name}
+                className="block text-sm font-medium text-gray-700"
+              >
+                {field.label}
+              </label>
+              <div className="mt-1">
+                {field.type === "select" ? (
+                  <select
+                    id={field.name}
+                    name={field.name}
+                    value={field.value}
+                    onChange={handleOnChange}
+                    className="block w-full p-2 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  >
+                    {field.options.map(option => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    id={field.name}
+                    name={field.name}
+                    value={field.value}
+                    onChange={handleOnChange}
+                    className="block w-full p-2 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  />
+                )}
+              </div>
             </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="last-name"
-              className="block text-sm font-medium text-gray-700">
-              Last name
-            </label>
-            <div className="mt-1">
-              <input
-                type="text"
-                name="lastName"
-                onChange={onChange}
-                value={formData.lastName}
-                className="block w-full rounded-md border-gray-300  p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-
+          ))}
+          {/* Country Select */}
           <div className="sm:col-span-2">
             <label
-              htmlFor="address"
-              className="block text-sm font-medium text-gray-700">
-              Address
-            </label>
-            <div className="mt-1">
-              <input
-                type="text"
-                name="address"
-                onChange={onChange}
-                value={formData.address}
-                autoComplete="street-address"
-                className="block w-full rounded-md border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="city"
-              className="block text-sm font-medium text-gray-700">
-              City
-            </label>
-            <div className="mt-1">
-              <input
-                type="text"
-                name="city"
-                onChange={onChange}
-                value={formData.city}
-                autoComplete="address-level2"
-                className="block w-full rounded-md border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label
               htmlFor="country"
-              className="block text-sm font-medium text-gray-700">
+              className="block text-sm font-medium text-gray-700"
+            >
               Country
             </label>
             <div className="mt-1">
-              <select
+              <Select
                 id="country"
                 name="country"
-                autoComplete="country"
-                value={formData.country}
-                onChange={onChange}
-                className="block w-full rounded-md border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                <option value="USA">United States</option>
-                <option value="CAN">Canada</option>
-                <option value="MEX">Mexico</option>
-                <option value="Ghana">Ghana</option>
-                <option value="Nigeria">Nigeria</option>
-                <option value="South Africa">South Africa</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="region"
-              className="block text-sm font-medium text-gray-700">
-              State / Province
-            </label>
-            <div className="mt-1">
-              <input
-                type="text"
-                name="region"
-                onChange={onChange}
-                value={formData.region}
-                autoComplete="address-level1"
-                className="block w-full rounded-md border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="postal-code"
-              className="block text-sm font-medium text-gray-700">
-              Postal code
-            </label>
-            <div className="mt-1">
-              <input
-                type="text"
-                name="postalCode"
-                onChange={onChange}
-                value={formData.postalCode}
-                autoComplete="postal-code"
-                className="block w-full rounded-md border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="sm:col-span-2">
-            <label
-              htmlFor="phone"
-              className="block text-sm font-medium text-gray-700">
-              Phone
-            </label>
-            <div className="mt-1">
-              <input
-                type="text"
-                name="phone"
-                id="phone"
-                onChange={onChange}
-                value={formData.phone}
-                autoComplete="tel"
-                className="block w-full rounded-md border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                options={countryOptions}
+                value={countryOptions.find(
+                  option => option.value === formData.country
+                )}
+                onChange={handleCountryChange}
+                className="block w-full p-2 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               />
             </div>
           </div>
           <button
             type="submit"
-            className="w-full rounded-md border border-transparent bg-indigo-600 py-3 px-4 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50">
+            className="w-full px-4 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
             Add Shipping Address
           </button>
         </form>

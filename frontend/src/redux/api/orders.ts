@@ -3,7 +3,7 @@ import { Order, OrderProduct, ShippingAddress } from "../types";
 import apiSlice from "./apiSlice";
 
 interface OrderResponse extends Order {
-  shipping_address: ShippingAddress;
+  shipping_address: ShippingAddress | null;
   products: OrderProduct[];
 }
 
@@ -13,9 +13,9 @@ const ordersApiSlice = apiSlice.injectEndpoints({
       query: () => `${ORDERS_URL}`,
       providesTags: ["Order"],
     }),
-    addOrder: builder.mutation<OrderResponse, Partial<Order>>({
+    createOrder: builder.mutation<OrderResponse, any>({
       query: newOrder => ({
-        url: `${ADMIN_ORDERS_URL}`,
+        url: `${ORDERS_URL}`,
         method: "POST",
         body: newOrder,
       }),
@@ -47,6 +47,17 @@ const ordersApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Order"],
     }),
+    applyCoupon: builder.mutation<
+      OrderResponse,
+      { coupon: string; id: number | string }
+    >({
+      query: ({ coupon, id }) => ({
+        url: `${ORDERS_URL}/${id}/applyCoupon`,
+        method: "POST",
+        body: { coupon },
+      }),
+      invalidatesTags: ["Order"],
+    }),
     deleteOrder: builder.mutation<void, number>({
       query: (id: number) => ({
         url: `${ADMIN_ORDERS_URL}/${id}`,
@@ -58,15 +69,23 @@ const ordersApiSlice = apiSlice.injectEndpoints({
       query: () => `${ADMIN_ORDERS_URL}/getOrderStats`,
       providesTags: ["Order"],
     }),
+    createStripeSession: builder.mutation<any, number | string>({
+      query: (id: number | string) => ({
+        url: `${ORDERS_URL}/${id}/createStripeSession`,
+        method: "POST",
+      }),
+    }),
   }),
 });
 
 export const {
   useGetOrdersQuery,
-  useAddOrderMutation,
+  useCreateOrderMutation,
   useDeleteOrderMutation,
   useGetOrderQuery,
   useUpdateOrderMutation,
   useUpdateOrdersStatusMutation,
   useGetOrderStatsQuery,
+  useApplyCouponMutation,
+  useCreateStripeSessionMutation,
 } = ordersApiSlice;

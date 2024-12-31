@@ -77,12 +77,12 @@ const App: React.FC = () => {
         <Route path="/products-filters" element={<ProductsFilters />} />
         <Route path="/products/:id" element={<Product />} />
         <Route path="/all-categories" element={<AllCategories />} />
-        {/* review */}
+        {/* shopping cart */}
+        <Route path="/shopping-cart" element={<ShoppingCart />} />
         <Route element={<ProtectedRoute />}>
+          {/* review */}
           <Route path="/add-review/:id" element={<AddReview />} />
 
-          {/* shopping cart */}
-          <Route path="/shopping-cart" element={<ShoppingCart />} />
           <Route path="/order-payment" element={<OrderPayment />} />
           {/* users */}
           <Route path="/customer-profile" element={<CustomerProfile />} />

@@ -7,10 +7,10 @@ use App\Http\Requests\UpdateOrderRequest;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
 use Throwable;
@@ -32,7 +32,6 @@ class OrderController extends Controller {
     return response()->json($order->load(['shippingAddress', 'products']));
   }
 
-
   public function store(CreateOrderRequest $request) {
     try {
       DB::beginTransaction();
@@ -40,91 +39,66 @@ class OrderController extends Controller {
       $request->validated();
 
       /** @var \App\Models\User $user */
-      $user = auth('api')->user(); // Explicitly declare the user type
-
-      if (!$user->shippingAddress) {
-        return response()->json(['message' => 'User does not have a shipping address set.'], 400);
-      }
-
-      // Merge duplicate products by summing quantities
-      $mergedProducts = [];
-      foreach ($request->products as $product) {
-        $productId = $product['id'];
-        $quantity = $product['quantity'];
-
-        if (isset($mergedProducts[$productId])) {
-          $mergedProducts[$productId]['quantity'] += $quantity;
-        } else {
-          $mergedProducts[$productId] = $product;
-        }
-      }
+      $user = auth('api')->user();
 
       $productsToSync = [];
       $orderTotal = 0;
 
-      // Calculate the total price and prepare products to sync
-      foreach ($mergedProducts as $product) {
-        $productModel = Product::findOrFail($product['id']);
+      foreach ($request->products as $product) {
+        $productModel = Product::with(['colors', 'sizes'])->findOrFail($product['id']);
         $quantity = $product['quantity'];
-        $qtyLeft = $productModel->quantity;
+        $color = $product['color'];
+        $size = $product['size'];
 
+        // Validate stock availability
+        $qtyLeft = $productModel->quantity;
         if ($quantity > $qtyLeft) {
           return response()->json([
             'message' => "Insufficient stock for product {$productModel->name}. Only {$qtyLeft} left."
           ], 400);
         }
 
+        if (!$productModel->colors->contains('name', $color)) {
+          return response()->json([
+            'message' => "Invalid color '{$color}' for product {$productModel->name}."
+          ], 400);
+        }
+
+        if (!$productModel->sizes->contains('name', $size)) {
+          return response()->json([
+            'message' => "Invalid size '{$size}' for product {$productModel->name}."
+          ], 400);
+        }
+
+        // Update product inventory
         $productModel->increment('total_sold', $quantity);
         $productModel->decrement('quantity', $quantity);
 
-        $productsToSync[$product['id']] = [
+        // Prepare pivot table data
+        $productsToSync[] = [
+          'product_id' => $product['id'],
           'quantity' => $quantity,
-          'price' => $productModel->price // Original price
+          'price' => $productModel->price, // Original price
+          'color' => $color,
+          'size' => $size,
         ];
 
-        // Calculate the total order amount (before applying the coupon)
         $orderTotal += $productModel->price * $quantity;
       }
 
-      // Check if the coupon is provided in the query string
-      $couponCode = $request->query('coupon');
-
-      if ($couponCode) {
-        $coupon = Coupon::where('code', strtoupper($couponCode))
-          ->where('start_date', '<=', now())
-          ->where('end_date', '>=', now())
-          ->first();
-
-        // If coupon is invalid or expired
-        if (!$coupon || $coupon->isExpired) {
-          return response()->json(['message' => 'Invalid or expired coupon.'], 400);
-        }
-
-        // Apply the coupon discount to each product price
-        $discount = $coupon->discount / 100;
-        foreach ($productsToSync as $productId => $syncData) {
-          $productsToSync[$productId]['price'] = $syncData['price'] * (1 - $discount);
-        }
-
-        // Recalculate the order total after applying the coupon
-        $orderTotal = 0;
-        foreach ($productsToSync as $syncData) {
-          $orderTotal += $syncData['price'] * $syncData['quantity'];
-        }
-      }
-
-      // Create the order with the user's shipping address and total price
+      // Create the order without a shipping address
       $order = $user->orders()->create([
-        'shipping_address_id' => $user->shippingAddress->id,
-        'total_price' => $orderTotal, // Total price after discount
+        'total_price' => $orderTotal, // Total price before discount
       ]);
 
       // Sync the products to the order
-      $order->products()->sync($productsToSync);
+      foreach ($productsToSync as $pivotData) {
+        $order->products()->attach($pivotData['product_id'], $pivotData);
+      }
 
       DB::commit();
 
-      return response()->json($order->load('products'), 201);
+      return response()->json($order->load(['shippingAddress', 'products']), 201);
     } catch (Throwable $e) {
       DB::rollBack();
 
@@ -137,12 +111,101 @@ class OrderController extends Controller {
 
 
 
+
+  public function applyCoupon(Request $request, $orderId) {
+    $request->validate([
+      'coupon' => 'required|string'
+    ]);
+
+    $couponCode = strtoupper($request->coupon);
+    $order = Order::findOrFail($orderId);
+
+    // Check if a coupon has already been applied
+    if ($order->applied_coupon_id) {
+      return response()->json(['message' => 'A coupon has already been applied to this order.'], 400);
+    }
+
+    $coupon = Coupon::where('code', $couponCode)
+      ->where('start_date', '<=', now())
+      ->where('end_date', '>=', now())
+      ->first();
+
+    if (!$coupon || $coupon->isExpired) {
+      return response()->json(['message' => 'Invalid or expired coupon.'], 400);
+    }
+
+    $discount = $coupon->discount / 100;
+    $productsToSync = [];
+    $newTotalPrice = 0;
+
+    foreach ($order->products as $product) {
+      $price = $product->pivot->price; // Original price per unit
+      $quantity = $product->pivot->quantity; // Original quantity
+      $color = $product->pivot->color; // Color from pivot
+      $size = $product->pivot->size;   // Size from pivot
+
+      if (!$quantity || $quantity <= 0) {
+        return response()->json(['message' => 'Invalid quantity detected for product ID: ' . $product->id], 400);
+      }
+
+      // Calculate discounted price
+      $discountedPrice = round($price * (1 - $discount), 2);
+
+      // Find the existing row in the pivot table
+      $existingPivot = DB::table('order_product')
+        ->where('order_id', $order->id)
+        ->where('product_id', $product->id)
+        ->where('color', $color)
+        ->where('size', $size)
+        ->first();
+
+      if ($existingPivot) {
+        // Update the existing pivot row
+        DB::table('order_product')
+          ->where('id', $existingPivot->id)
+          ->update([
+            'quantity' => $quantity,
+            'price' => $discountedPrice,
+            'updated_at' => now(),
+          ]);
+      } else {
+        // Create a new pivot row
+        DB::table('order_product')->insert([
+          'order_id' => $order->id,
+          'product_id' => $product->id,
+          'quantity' => $quantity,
+          'price' => $discountedPrice,
+          'color' => $color,
+          'size' => $size,
+          'created_at' => now(),
+          'updated_at' => now(),
+        ]);
+      }
+
+      // Update the total price
+      $newTotalPrice += $discountedPrice * $quantity;
+    }
+
+    // Update order total and applied coupon
+    $order->update([
+      'total_price' => round($newTotalPrice, 2),
+      'applied_coupon_id' => $coupon->id,
+    ]);
+
+    return response()->json($order->load(['shippingAddress', 'products']), 200);
+  }
+
+
+
+
+
+
+
   public function update(UpdateOrderRequest $request, Order $order) {
     Gate::authorize('access', $order);
 
     try {
       DB::beginTransaction();
-
 
       // Prevent updates to a paid order
       if (strtolower($order->payment_status) === 'paid') {
@@ -152,40 +215,34 @@ class OrderController extends Controller {
       // Validate the request data
       $data = $request->validated();
 
-      // Merge duplicate products by summing quantities
-      $mergedProducts = [];
-      foreach ($request->products as $product) {
-        $productId = $product['id'];
-        $quantity = $product['quantity'];
-
-        // If the product already exists, sum the quantities
-        if (isset($mergedProducts[$productId])) {
-          $mergedProducts[$productId]['quantity'] += $quantity;
-        } else {
-          $mergedProducts[$productId] = $product;
-        }
-      }
-
-      // Initialize variables for product syncing and total order price calculation
       $productsToSync = [];
       $orderTotal = 0;
 
-      foreach ($mergedProducts as $product) {
-        $productModel = Product::findOrFail($product['id']);
+      foreach ($request->products as $product) {
+        $productModel = Product::with(['colors', 'sizes'])->findOrFail($product['id']);
         $newQuantity = $product['quantity'];
-        $oldQuantity = $order->products()->find($product['id'])->pivot->quantity ?? 0;
+        $color = $product['color'];
+        $size = $product['size'];
 
-        // Calculate qty_left (quantity + oldQuantity because the old quantity is reserved in the order)
+        // Find the existing pivot entry, if any
+        $existingPivot = $order->products()->wherePivot('product_id', $product['id'])
+          ->wherePivot('color', $color)
+          ->wherePivot('size', $size)
+          ->first();
+
+        $oldQuantity = $existingPivot ? $existingPivot->pivot->quantity : 0;
+
+        // Calculate available stock
         $qtyLeft = $productModel->quantity + $oldQuantity;
 
-        // Check if the requested quantity exceeds the available quantity
+        // Check stock availability
         if ($newQuantity > $qtyLeft) {
           return response()->json([
-            'message' => "Insufficient stock for product {$productModel->name}. Only {$qtyLeft} left."
+            'message' => "Insufficient stock for product {$productModel->name} in {$size}/{$color}. Only {$qtyLeft} left."
           ], 400);
         }
 
-        // Adjust total sold and available quantity
+        // Adjust inventory
         if ($newQuantity > $oldQuantity) {
           $diff = $newQuantity - $oldQuantity;
           $productModel->increment('total_sold', $diff);
@@ -196,55 +253,39 @@ class OrderController extends Controller {
           $productModel->increment('quantity', $diff);
         }
 
-        // Add the product price and quantity to calculate total order price
-        $productsToSync[$product['id']] = [
+        // Prepare pivot table data
+        $productsToSync[] = [
+          'product_id' => $product['id'],
           'quantity' => $newQuantity,
-          'price' => $productModel->price // Store the product price at the time of order
+          'price' => $productModel->price,
+          'color' => $color,
+          'size' => $size,
         ];
 
-        // Add to the total price
+        // Update total price
         $orderTotal += $productModel->price * $newQuantity;
       }
 
-      // Check if a coupon is provided in the query string
-      $couponCode = $request->query('coupon');
-      if ($couponCode) {
-        $coupon = Coupon::where('code', strtoupper($couponCode))
-          ->where('start_date', '<=', now())
-          ->where('end_date', '>=', now())
-          ->first();
+      // Delete old pivot entries
+      $order->products()->detach();
 
-        // If coupon is invalid or expired
-        if (!$coupon || $coupon->isExpired) {
-          return response()->json(['message' => 'Invalid or expired coupon.'], 400);
-        }
-
-        // Apply the coupon discount to each product price
-        $discount = $coupon->discount / 100;
-        foreach ($productsToSync as $productId => $syncData) {
-          $productsToSync[$productId]['price'] = $syncData['price'] * (1 - $discount);
-        }
-
-        // Recalculate the order total after applying the coupon
-        $orderTotal = 0;
-        foreach ($productsToSync as $syncData) {
-          $orderTotal += $syncData['price'] * $syncData['quantity'];
-        }
+      // Attach new entries
+      foreach ($productsToSync as $pivotData) {
+        $order->products()->attach($pivotData['product_id'], [
+          'quantity' => $pivotData['quantity'],
+          'price' => $pivotData['price'],
+          'color' => $pivotData['color'],
+          'size' => $pivotData['size'],
+        ]);
       }
 
-      // Sync the updated products with the order
-      $order->products()->sync($productsToSync);
-
-      // Set the shipping address from the user
-      $data['shipping_address_id'] = auth('api')->user()->shippingAddress->id;
-      $data['total_price'] = $orderTotal; // Update the total price after discount
-
-      // Update the order with the validated data
+      // Update the order
+      $data['total_price'] = $orderTotal; // Update the total price without any discount
       $order->update($data);
 
       DB::commit();
 
-      // Return the updated order with the products
+      // Return the updated order with products
       return response()->json($order->load('products'));
     } catch (Throwable $e) {
       DB::rollBack();
@@ -255,6 +296,10 @@ class OrderController extends Controller {
       ], 500);
     }
   }
+
+
+
+
 
 
 
@@ -304,6 +349,18 @@ class OrderController extends Controller {
       return response()->json(['message' => 'This order has already been paid.'], 403);
     }
 
+    /** @var \App\Models\User $user */
+    $user = auth('api')->user();
+
+    // Check if the user has a shipping address
+    if (!$user->shippingAddress) {
+      return response()->json(['message' => 'User does not have a shipping address set.'], 400);
+    }
+
+    // Set the shipping_address_id on the order
+    $order->shipping_address_id = $user->shippingAddress->id;
+    $order->save();
+
     // Initialize Stripe with the secret key
     Stripe::setApiKey(env('STRIPE_SECRET'));
 
@@ -332,8 +389,8 @@ class OrderController extends Controller {
           'order_id' => $order->id,
         ],
         'mode' => 'payment',
-        'success_url' => 'http://localhost:3000/success',
-        'cancel_url' => 'http://localhost:3000/cancel',
+        'success_url' => 'http://localhost:5173/customer-profile?success',
+        'cancel_url' => 'http://localhost:5173/customer-profile?cancel',
       ]);
 
       // Return the session URL

@@ -11,7 +11,16 @@ const baseQuery = fetchBaseQuery({
 
 const apiSlice = createApi({
   baseQuery,
-  tagTypes: ["Category", "Coupon", "Color", "Size", "Brand", "Order", "Review"],
+  tagTypes: [
+    "Category",
+    "Coupon",
+    "Color",
+    "Size",
+    "Brand",
+    "Order",
+    "Review",
+    "User",
+  ],
   endpoints: () => ({}),
 });
 

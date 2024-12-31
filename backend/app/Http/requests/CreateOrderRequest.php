@@ -20,8 +20,10 @@ class CreateOrderRequest extends FormRequest {
   public function rules(): array {
     return [
       'products' => 'required|array',
-      'products.*.id' => 'exists:products,id',
+      'products.*.id' => 'required|exists:products,id',
       'products.*.quantity' => 'required|integer|min:1',
+      'products.*.color' => 'required|string|max:255',
+      'products.*.size' => 'required|string|max:255',
     ];
   }
 }

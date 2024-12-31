@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RadioGroup } from "@headlessui/react";
 import {
   CurrencyDollarIcon,
   GlobeAmericasIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/20/solid";
-import { Link, useParams } from "react-router-dom";
+import { ErrorResponse, Link, useParams } from "react-router-dom";
 import { useGetProductQuery } from "../../../redux/api/products";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { addProductToCart } from "../../../redux/features/cart/cartSlice";
+import { toast } from "react-toastify";
 
 const policies = [
   {
@@ -26,17 +29,44 @@ function classNames(...classes) {
 }
 
 export default function Product() {
-  const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
-
   const { id } = useParams<{ id: string }>();
   const { data: { data: product } = {}, error } = useGetProductQuery(id);
 
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+
+  useEffect(() => {
+    if (product) {
+      setSelectedColor(product.colors[0]); // Set the first color as default
+      setSelectedSize(product.sizes[0]); // Set the first size as default
+    }
+  }, [product]);
+
+  const dispatch = useAppDispatch();
+
   //Add to cart handler
-  const addToCartHandler = item => {};
-  let productColor;
-  let productSize;
-  const cartItems = [];
+  const addToCartHandler = e => {
+    e.preventDefault();
+    dispatch(
+      addProductToCart({
+        id,
+        quantity: 1,
+        color: selectedColor,
+        size: selectedSize,
+        product,
+      })
+    );
+    toast.info(
+      `Added to cart: ${product.name}(${selectedColor}, ${selectedSize})`
+    );
+  };
+  const cartItems = useAppSelector(state => state.cart.products);
+
+  if (error) {
+    const err = error as ErrorResponse;
+    console.error(err);
+    toast.error(err.data?.message || "An error occurred while fetching data");
+  }
 
   return (
     <div className="bg-white">
@@ -136,10 +166,14 @@ export default function Product() {
               {/* Color picker */}
               <div>
                 <h2 className="text-sm font-medium text-gray-900">Color</h2>
-                <div className="flex items-center space-x-3">
-                  <RadioGroup value={selectedColor} onChange={setSelectedColor}>
-                    <div className="flex items-center mt-4 space-x-3">
-                      {product?.colors?.map(color => (
+                <RadioGroup value={selectedColor} onChange={setSelectedColor}>
+                  <div className="flex items-center mt-4 space-x-3">
+                    {product?.colors?.map(color => {
+                      const isUnknownColor =
+                        !/^#([0-9A-F]{3}){1,2}$/i.test(color) &&
+                        !CSS.supports("color", color); // Check for valid hex or named color
+
+                      return (
                         <RadioGroup.Option
                           key={color}
                           value={color}
@@ -154,18 +188,29 @@ export default function Product() {
                           <RadioGroup.Label as="span" className="sr-only">
                             {color}
                           </RadioGroup.Label>
-                          <span
-                            style={{ backgroundColor: color }}
-                            aria-hidden="true"
-                            className={classNames(
-                              "h-8 w-8 border border-black border-opacity-10 rounded-full"
-                            )}
-                          />
+                          {isUnknownColor ? (
+                            <span
+                              aria-hidden="true"
+                              className={classNames(
+                                "text-gray-900 text-sm font-medium uppercase border border-black border-opacity-10 rounded-full px-2 py-1"
+                              )}
+                            >
+                              {color}
+                            </span>
+                          ) : (
+                            <span
+                              style={{ backgroundColor: color }}
+                              aria-hidden="true"
+                              className={classNames(
+                                "h-8 w-8 border border-black border-opacity-10 rounded-full"
+                              )}
+                            />
+                          )}
                         </RadioGroup.Option>
-                      ))}
-                    </div>
-                  </RadioGroup>
-                </div>
+                      );
+                    })}
+                  </div>
+                </RadioGroup>
               </div>
 
               {/* Size picker */}
@@ -184,7 +229,7 @@ export default function Product() {
                       <RadioGroup.Option
                         key={size}
                         value={size}
-                        className={({ active, checked }) => {
+                        className={({ checked }) => {
                           return classNames(
                             checked
                               ? "bg-indigo-600 border-transparent  text-white hover:bg-indigo-700"
@@ -210,7 +255,7 @@ export default function Product() {
                 </button>
               ) : (
                 <button
-                  onClick={() => addToCartHandler(1)}
+                  onClick={e => addToCartHandler(e)}
                   className="flex items-center justify-center w-full px-8 py-3 mt-8 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
                   Add to cart
@@ -276,41 +321,45 @@ export default function Product() {
             Recent reviews
           </h2>
 
-          <div className="pb-10 mt-6 space-y-10 border-t border-b border-gray-200 divide-y divide-gray-200">
+          <div className="pb-10 mt-6 space-y-12 border-t border-b border-gray-200 divide-y divide-gray-200">
             {product?.reviews.map(review => (
               <div
                 key={review.id}
-                className="pt-10 lg:grid lg:grid-cols-12 lg:gap-x-8"
+                className="pt-8 lg:grid lg:grid-cols-12 lg:gap-x-6 xl:gap-x-8"
               >
-                <div className="lg:col-span-8 lg:col-start-5 xl:col-span-9 xl:col-start-4 xl:grid xl:grid-cols-3 xl:items-start xl:gap-x-8">
+                {/* Review Section */}
+                <div className="lg:col-span-8 lg:col-start-5 xl:col-span-9 xl:col-start-4 xl:grid xl:grid-cols-3 xl:items-start xl:gap-x-6">
+                  {/* Rating */}
                   <div className="flex items-center xl:col-span-1">
-                    <div className="flex items-center">
+                    <div className="flex items-center space-x-1">
                       {[0, 1, 2, 3, 4].map(rating => (
                         <StarIcon
                           key={rating}
                           className={classNames(
                             review.rating > rating
                               ? "text-yellow-400"
-                              : "text-gray-200",
+                              : "text-gray-300",
                             "h-5 w-5 flex-shrink-0"
                           )}
                           aria-hidden="true"
                         />
                       ))}
                     </div>
-                    <p className="ml-3 text-sm text-gray-700">
+                    <p className="ml-3 text-sm font-semibold text-gray-700">
                       {review.rating}
                       <span className="sr-only"> out of 5 stars</span>
                     </p>
                   </div>
 
+                  {/* Review Message */}
                   <div className="mt-4 lg:mt-6 xl:col-span-2 xl:mt-0">
-                    <h3 className="text-sm font-medium text-gray-900">
+                    <h3 className="text-base font-medium text-gray-900">
                       {review?.message}
                     </h3>
                   </div>
                 </div>
 
+                {/* User Info Section */}
                 <div className="flex items-center mt-6 text-sm lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:mt-0 lg:flex-col lg:items-start xl:col-span-3">
                   <p className="font-medium text-gray-900">{review.user_id}</p>
                   <time

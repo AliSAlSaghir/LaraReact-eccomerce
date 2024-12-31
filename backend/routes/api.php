@@ -57,6 +57,7 @@ Route::middleware(['cookie.auth'])->group(function () {
   Route::delete('deleteShippingAddress', [ShippingAddressController::class, 'destroy']);
   Route::apiResource('orders', OrderController::class);
   Route::post('orders/{order}/createStripeSession', [OrderController::class, 'createStripeSession']);
+  Route::post('orders/{order}/applyCoupon', [OrderController::class, 'applyCoupon']);
 });
 
 Route::middleware(['cookie.auth', 'role:admin'])->group(function () {

@@ -22,6 +22,8 @@ class UpdateOrderRequest extends FormRequest {
       'products' => 'array',
       'products.*.id' => 'exists:products,id',
       'products.*.quantity' => 'integer|min:1',
+      'products.*.color' => 'string|max:255',
+      'products.*.size' => 'string|max:255',
     ];
   }
 }

@@ -107,7 +107,7 @@ export interface Coupon {
 export interface Order {
   id: number;
   user_id: number;
-  shipping_address_id: number;
+  shipping_address_id: number | null;
   order_number: string;
   payment_status: "paid" | "unpaid";
   payment_method: string;
@@ -123,6 +123,8 @@ export interface Order {
 interface ProductPivot {
   order_id: number;
   product_id: number;
+  color: string;
+  size: string;
   quantity: number;
   price: string;
   created_at: string;

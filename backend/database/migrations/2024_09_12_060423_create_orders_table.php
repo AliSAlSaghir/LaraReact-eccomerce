@@ -14,7 +14,7 @@ return new class extends Migration {
     Schema::create('orders', function (Blueprint $table) {
       $table->id();
       $table->foreignIdFor(User::class)->cascadeOnDelete();
-      $table->foreignIdFor(ShippingAddress::class)->cascadeOnDelete();
+      $table->foreignIdFor(ShippingAddress::class)->nullable();
       $table->string('order_number')->unique();
       $table->enum('payment_status', ['paid', 'unpaid'])->default('unpaid');
       $table->string('payment_method')->default('Not specified');
@@ -22,6 +22,7 @@ return new class extends Migration {
       $table->string('currency')->default('Not specified');
       $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])->default('pending');
       $table->datetime('delivered_at')->nullable();
+      $table->unsignedBigInteger('applied_coupon_id')->nullable()->index();
       $table->timestamps();
     });
   }

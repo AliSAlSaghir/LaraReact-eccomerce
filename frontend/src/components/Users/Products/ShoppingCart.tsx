@@ -1,107 +1,209 @@
-import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
-  CheckIcon,
-  ClockIcon,
-  QuestionMarkCircleIcon,
-  XMarkIcon,
-} from "@heroicons/react/20/solid";
-import { Link } from "react-router-dom";
+  clearCart,
+  removeProductFromCart,
+  updateProductQuantity,
+} from "../../../redux/features/cart/cartSlice";
+import { toast } from "react-toastify";
+import { useCreateOrderMutation } from "../../../redux/api/orders";
+import { useNavigate } from "react-router-dom";
+
+function isValidColor(color: string): boolean {
+  const s = new Option().style;
+  s.color = color;
+  return s.color !== "";
+}
 
 export default function ShoppingCart() {
-  let cartItems;
-  let changeOrderItemQtyHandler;
-  let removeOrderItemFromLocalStorageHandler;
-  let calculateTotalDiscountedPrice;
-  let error;
-  let couponFound;
-  let applyCouponSubmit;
-  let setCoupon;
-  let loading;
-  let coupon;
+  const cartItems = useAppSelector(state => state.cart.products);
+  const dispatch = useAppDispatch();
+
+  const [createOrder] = useCreateOrderMutation();
+
+  const navigate = useNavigate();
+
+  const changeOrderItemQtyHandler = (
+    id: string | number,
+    qty: number,
+    color: string,
+    size: string
+  ) => {
+    dispatch(
+      updateProductQuantity({
+        id,
+        quantity: qty,
+        color,
+        size,
+      })
+    );
+    toast.warn(
+      `Changed quantity for product ID: ${id}, Color: ${color}, Size: ${size} to ${qty}`
+    );
+  };
+
+  const removeOrderItemHandler = (
+    id: string | number,
+    color: string,
+    size: string
+  ) => {
+    dispatch(
+      removeProductFromCart({
+        id,
+        color,
+        size,
+      })
+    );
+
+    toast.warn(`Removed product ID: ${id}, Color: ${color}, Size: ${size}`);
+  };
+
+  const calculateTotalPrice = () => {
+    return cartItems.reduce(
+      (total, product) =>
+        total + product.quantity * Number(product.product.price),
+      0
+    );
+  };
+
+  const createOrderHandler = async () => {
+    try {
+      const dataToSend = {
+        products: cartItems.map(item => ({
+          id: item.id,
+          quantity: item.quantity,
+          color: item.color,
+          size: item.size,
+        })),
+      };
+
+      const order = await createOrder(dataToSend);
+
+      dispatch(clearCart());
+      localStorage.removeItem("cart");
+
+      navigate(`/order-payment?order=${order?.data.id}`);
+    } catch (err) {
+      console.log(err);
+      toast.error("Something went wrong");
+    }
+  };
+
   return (
     <div className="bg-white">
-      <div className="mx-auto max-w-2xl px-4 pt-16 pb-24 sm:px-6 lg:max-w-7xl lg:px-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <div className="max-w-4xl px-4 py-16 mx-auto sm:px-6 lg:max-w-7xl lg:px-8">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
           Shopping Cart
         </h1>
-        <div className="mt-12 lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16">
+        <div className="grid grid-cols-1 mt-12 lg:grid-cols-12 lg:gap-x-12">
           <section aria-labelledby="cart-heading" className="lg:col-span-7">
             <h2 id="cart-heading" className="sr-only">
               Items in your shopping cart
             </h2>
+            <ul role="list" className="space-y-4">
+              {cartItems?.map(product => (
+                <li
+                  key={`${product?.id}${product.color}${product.size}`}
+                  className="relative flex items-start p-4 border border-gray-200 rounded-lg shadow-sm w-full sm:w-[95%] mx-auto"
+                >
+                  {/* Remove Button */}
+                  <button
+                    onClick={() =>
+                      removeOrderItemHandler(
+                        product.id,
+                        product.color,
+                        product.size
+                      )
+                    }
+                    className="absolute text-gray-500 top-2 right-2 hover:text-red-600"
+                    aria-label="Remove item"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
 
-            <ul
-              role="list"
-              className="divide-y divide-gray-200 border-t border-b border-gray-200">
-              {cartItems?.map((product) => (
-                <li key={product._id} className="flex py-6 sm:py-10">
+                  {/* Product Image */}
                   <div className="flex-shrink-0">
                     <img
-                      src={product.imageSrc}
-                      alt={product.imageAlt}
-                      className="h-24 w-24 rounded-md object-cover object-center sm:h-48 sm:w-48"
+                      src={`http://localhost:8000/${product.product.images[0]}`}
+                      alt={product.product.name}
+                      className="object-cover object-center w-20 h-20 rounded-md sm:h-32 sm:w-28"
                     />
                   </div>
 
-                  <div className="ml-4 flex flex-1 flex-col justify-between sm:ml-6">
-                    <div className="relative pr-9 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:pr-0">
-                      <div>
-                        <div className="flex justify-between">
-                          <h3 className="text-sm">
-                            <a
-                              href={product.href}
-                              className="font-medium text-gray-700 hover:text-gray-800">
-                              {product.name}
-                            </a>
-                          </h3>
-                        </div>
-                        <div className="mt-1 flex text-sm">
-                          <p className="text-gray-500">{product.color}</p>
-                          {product.size ? (
-                            <p className="ml-4 border-l border-gray-200 pl-4 text-gray-500">
-                              {product.size}
-                            </p>
-                          ) : null}
-                        </div>
-                        <p className="mt-1 text-sm font-medium text-gray-900">
-                          $ {product.discountedPrice} X {product.qty}
-                        </p>
+                  {/* Product Info */}
+                  <div className="flex flex-col justify-between flex-1 ml-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700 sm:text-base">
+                        {product.product.name}
+                      </h3>
+                      <div className="flex items-center mt-2 text-xs sm:text-sm">
+                        {isValidColor(product.color) ? (
+                          <div
+                            className="w-5 h-5 border border-gray-300 rounded-full"
+                            style={{
+                              backgroundColor: product.color,
+                            }}
+                            title={product.color}
+                          ></div>
+                        ) : (
+                          <span className="px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-200 rounded-md">
+                            {product.color || "Unknown"}
+                          </span>
+                        )}
+                        {product.size && (
+                          <span className="ml-4 text-gray-600">
+                            Size: {product.size}
+                          </span>
+                        )}
                       </div>
+                      <p className="mt-2 text-sm text-gray-700">
+                        ${product.product.price} × {product.quantity}
+                      </p>
+                    </div>
 
-                      <div className="mt-4 sm:mt-0 sm:pr-9">
-                        <label className="sr-only">
-                          Quantity, {product.name}
-                        </label>
-                        <select
-                          onChange={(e) =>
-                            changeOrderItemQtyHandler(
-                              product?.productID,
-                              e.target.value
-                            )
-                          }
-                          className="max-w-full rounded-md border border-gray-300 py-1.5 text-left text-base font-medium leading-5 text-gray-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm">
-                          {/* use the qty  */}
-
-                          {[...Array(product?.qtyLeft).keys()].map((x) => (
-                            <option key={x + 1} value={x + 1}>
-                              {x + 1}
-                            </option>
-                          ))}
-                        </select>
-                        {/* remove */}
-                        <div className="absolute top-0 right-0">
-                          <button
-                            onClick={() =>
-                              removeOrderItemFromLocalStorageHandler(
-                                product?._id
-                              )
-                            }
-                            className="-m-2 inline-flex p-2 text-gray-400 hover:text-gray-500">
-                            <span className="sr-only">Remove</span>
-                            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </div>
+                    <div className="flex items-center mt-4 space-x-4">
+                      {/* Quantity Selector */}
+                      <select
+                        value={product.quantity}
+                        onChange={e =>
+                          changeOrderItemQtyHandler(
+                            product.id,
+                            +e.target.value,
+                            product.color,
+                            product.size
+                          )
+                        }
+                        className="px-2 py-1 text-sm text-gray-700 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                      >
+                        {Array.from(
+                          {
+                            length:
+                              product.product.quantity -
+                              cartItems
+                                ?.filter(
+                                  item => item.product.id === product.product.id
+                                )
+                                ?.reduce((acc, item) => acc + item.quantity, 0),
+                          },
+                          (_, i) => i + 1
+                        ).map(value => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </li>
@@ -109,79 +211,51 @@ export default function ShoppingCart() {
             </ul>
           </section>
 
-          {/* Order summary */}
           <section
             aria-labelledby="summary-heading"
-            className="mt-16 rounded-lg bg-gray-50 px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8">
-            <h2
-              id="summary-heading"
-              className="text-lg font-medium text-gray-900">
-              Order summary
-            </h2>
-
-            <dl className="mt-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <dt className="text-sm text-gray-600">Subtotal</dt>
-                <dd className="text-sm font-medium text-gray-900">
-                  $ {calculateTotalDiscountedPrice().toFixed(2)}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between border-t border-gray-200 pt-4"></div>
-              {/* add coupon */}
-              <dt className="flex items-center text-sm text-gray-600">
-                <span>Have coupon code? </span>
-              </dt>
-              {/* errr */}
-              {error && <span className="text-red-500">{error?.message}</span>}
-              {/* success */}
-              {couponFound?.status === "success" && !error && (
-                <span className="text-green-800">
-                  Congrats! You have got{" "}
-                  {couponFound?.coupon?.discountInPercentage} % discount
-                </span>
-              )}
-              <form onSubmit={applyCouponSubmit}>
-                <div className="mt-1">
-                  <input
-                    value={coupon}
-                    onChange={(e) => setCoupon(e.target.value)}
-                    type="text"
-                    className="block w-full rounded-md border p-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="you@example.com"
-                  />
+            className="mt-8 lg:mt-0 lg:col-span-5"
+          >
+            <div className="p-6 rounded-lg shadow-sm bg-gray-50">
+              <h2
+                id="summary-heading"
+                className="text-lg font-medium text-gray-900"
+              >
+                Order Summary
+              </h2>
+              <dl className="mt-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <dt className="text-sm text-gray-600">Subtotal</dt>
+                  <dd className="text-sm font-medium text-gray-900">
+                    $ {calculateTotalPrice().toFixed(2)}
+                  </dd>
                 </div>
-                {loading ? (
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <dt className="text-base font-medium text-gray-900">
+                    Order Total
+                  </dt>
+                  <dd className="text-xl font-medium text-gray-900">
+                    $ {calculateTotalPrice().toFixed(2)}
+                  </dd>
+                </div>
+              </dl>
+              <div className="mt-6">
+                {cartItems?.length <= 0 ? (
                   <button
+                    style={{ cursor: "not-allowed" }}
                     disabled
-                    className="inline-flex  text-center mt-4 items-center rounded border border-transparent bg-gray-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    Loading Please Wait...
+                    className="flex items-center justify-center w-full px-8 py-3 mt-8 text-base font-medium text-white bg-gray-600 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  >
+                    Submit Order
                   </button>
                 ) : (
-                  <button className="inline-flex  text-center mt-4 items-center rounded border border-transparent bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    Apply coupon
+                  <button
+                    onClick={createOrderHandler}
+                    className="flex items-center justify-center w-full px-8 py-3 mt-8 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  >
+                    Submit Order
                   </button>
                 )}
-              </form>
-
-              <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-                <dt className="text-base font-medium text-gray-900">
-                  Order total
-                </dt>
-                <dd className=" text-xl font-medium text-gray-900">
-                  $ {calculateTotalDiscountedPrice().toFixed(2)}
-                </dd>
               </div>
-            </dl>
-
-            <div className="mt-6">
-              <Link
-                //  pass data to checkout page
-                to={{
-                  pathname: "/order-payment",
-                }}
-                className="w-full rounded-md border border-transparent bg-indigo-600 py-3 px-4 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50">
-                Proceed to Checkout
-              </Link>
             </div>
           </section>
         </div>

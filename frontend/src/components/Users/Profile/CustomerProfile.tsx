@@ -1,10 +1,46 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import CustomerDetails from "./CustomerDetails";
 import ShippingAddressDetails from "./ShippingAddressDetails";
 import { useGetMeQuery } from "../../../redux/api/auth";
 import { Order, OrderProduct } from "../../../redux/types";
+import { useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function CustomerProfile() {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  useEffect(() => {
+    if (queryParams.has("success")) {
+      toast.success("Order Payment Successful!");
+
+      // Remove the 'success' query parameter from the URL
+      queryParams.delete("success");
+      navigate(`${location.pathname}?${queryParams.toString()}`, {
+        replace: true,
+      });
+    }
+
+    if (queryParams.has("cancel")) {
+      toast.error("Order Payment Failed!");
+
+      // Remove the 'cancel' query parameter from the URL
+      queryParams.delete("cancel");
+      navigate(`${location.pathname}?${queryParams.toString()}`, {
+        replace: true,
+      });
+    }
+  }, [queryParams, navigate, location]);
+
   const { data: user, isLoading, error } = useGetMeQuery();
+
+  // Function to handle payment redirection
+  const handlePayNow = (orderId: number) => {
+    navigate(`/order-payment?order=${orderId}`);
+  };
+
   return (
     <div className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
       {/* Header */}
@@ -118,6 +154,18 @@ export default function CustomerProfile() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Pay Now Button for Unpaid Orders */}
+              <div className="flex justify-end mt-6">
+                {order.payment_status === "unpaid" && (
+                  <button
+                    onClick={() => handlePayNow(order.id)}
+                    className="px-6 py-3 text-sm font-semibold text-white transition-transform duration-200 transform rounded-lg shadow-md bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 hover:scale-105"
+                  >
+                    Pay Now
+                  </button>
+                )}
               </div>
             </div>
           ))}

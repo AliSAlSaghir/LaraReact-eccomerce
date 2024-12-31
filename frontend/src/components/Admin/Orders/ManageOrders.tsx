@@ -9,6 +9,12 @@ import { useGetOrdersQuery } from "../../../redux/api/orders";
 import { ErrorResponse } from "react-router-dom";
 import { toast } from "react-toastify";
 
+function isValidColor(color: string): boolean {
+  const s = new Option().style;
+  s.color = color;
+  return s.color !== "";
+}
+
 export default function ManageOrders() {
   // Get orders
   const { data: orders, isLoading, error } = useGetOrdersQuery();
@@ -42,7 +48,7 @@ export default function ManageOrders() {
               ) : (
                 orders?.map(order => (
                   <div
-                    key={order.id}
+                    key={order?.id}
                     className="bg-white border-t border-b border-gray-200 shadow-sm sm:rounded-lg sm:border"
                   >
                     {/* Order Level Details */}
@@ -177,7 +183,10 @@ export default function ManageOrders() {
                     {/* Products List */}
                     <ul role="list" className="divide-y divide-gray-200">
                       {order?.products?.map(product => (
-                        <li key={product?.id} className="p-4 sm:p-6">
+                        <li
+                          key={`${order?.id}${product?.id}${product.pivot.color}${product.pivot.size}`}
+                          className="p-4 sm:p-6"
+                        >
                           <div className="flex items-center sm:items-start">
                             <div className="flex-shrink-0 w-20 h-20 overflow-hidden bg-gray-200 rounded-lg sm:h-40 sm:w-40">
                               <img
@@ -187,12 +196,44 @@ export default function ManageOrders() {
                               />
                             </div>
                             <div className="flex-1 ml-6 text-sm">
-                              <div className="font-medium text-gray-900 sm:flex sm:justify-between">
-                                <h5>{product.name}</h5>
-                                <p className="mt-2 sm:mt-0">
-                                  ${product?.pivot.price}
+                              <div className="flex-1 ml-6 text-sm">
+                                <div className="flex items-center justify-between font-medium text-gray-900">
+                                  {/* Product name, color, and size */}
+                                  <div className="flex items-center gap-4 space-x-4">
+                                    <h5 className="text-gray-900">
+                                      {product.name}
+                                    </h5>
+                                    {/* Product color */}
+                                    {isValidColor(product?.pivot.color) ? (
+                                      <div
+                                        className="w-8 h-8 border border-black rounded-full border-opacity-10"
+                                        style={{
+                                          backgroundColor: product?.pivot.color,
+                                        }}
+                                        title={product?.pivot.color} // Tooltip for color name
+                                      ></div>
+                                    ) : (
+                                      <div className="flex items-center justify-center px-3 py-3 text-sm font-medium text-gray-900 uppercase bg-white border border-gray-200 rounded-md cursor-pointer">
+                                        {product?.pivot.color || "Unknown"}
+                                      </div>
+                                    )}
+
+                                    {/* Product size */}
+                                    <div className="flex items-center justify-center px-3 py-3 text-sm font-medium text-gray-900 uppercase bg-white border border-gray-200 rounded-md cursor-pointer">
+                                      {product?.pivot.size}
+                                    </div>
+                                  </div>
+
+                                  {/* Product price */}
+                                  <p className="text-gray-900">
+                                    ${product?.pivot.price}
+                                  </p>
+                                </div>
+                                <p className="hidden text-gray-500 sm:mt-2 sm:block">
+                                  {product?.description}
                                 </p>
                               </div>
+
                               <p className="hidden text-gray-500 sm:mt-2 sm:block">
                                 {product?.description}
                               </p>

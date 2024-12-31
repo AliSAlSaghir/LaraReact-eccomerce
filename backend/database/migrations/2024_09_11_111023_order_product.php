@@ -17,6 +17,9 @@ return new class extends Migration {
       $table->foreignIdFor(Product::class)->cascadeOnDelete();
       $table->integer('quantity')->default(1);
       $table->decimal('price', 8, 2);
+      $table->string('color');
+      $table->string('size');
+      $table->unique(['order_id', 'product_id', 'color', 'size']);
       $table->timestamps();
     });
   }
