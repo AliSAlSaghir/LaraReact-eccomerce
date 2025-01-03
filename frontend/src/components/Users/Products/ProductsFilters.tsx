@@ -15,6 +15,13 @@ import {
   PlusIcon,
 } from "@heroicons/react/20/solid";
 import Products from "./Products";
+import { useGetBrandsQuery } from "../../../redux/api/brands";
+import { useGetColorsQuery } from "../../../redux/api/colors";
+import { useGetSizesQuery } from "../../../redux/api/sizes";
+import { ErrorResponse, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useLazyGetProductsQuery } from "../../../redux/api/products";
+import { Color } from "../../../redux/types";
 
 const sortOptions = [
   { name: "Most Popular", href: "#", current: true },
@@ -24,12 +31,18 @@ const sortOptions = [
   { name: "Price: High to Low", href: "#", current: false },
 ];
 
-const allPrice = [
+const prices = [
   {
-    amount: "0 - 50",
+    amount: "0 - 25",
   },
   {
-    amount: "50 - 100",
+    amount: "25 - 50",
+  },
+  {
+    amount: "50 - 75",
+  },
+  {
+    amount: "75 - 100",
   },
   {
     amount: "100 - 150",
@@ -43,45 +56,75 @@ const allPrice = [
   {
     amount: "250 - 300",
   },
-  {
-    amount: "300 - 350",
-  },
-  {
-    amount: "350 - 400",
-  },
 ];
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-const sizeCategories = [
-  "XXS",
-  "XS",
-  "S",
-  "M",
-  "L",
-  "XL",
-  "XXL",
-  "XXXL",
-  "XXXXL",
-];
+const isValidColor = color => {
+  const s = new Option().style;
+  s.color = color;
+  return s.color !== "";
+};
 
 export default function ProductsFilters() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  let colorsLoading;
-  let colorsError;
-  let colors;
-  let setPrice;
-  let brands;
-  let setSize;
-  let setColor;
-  let setBrand;
-  let productsLoading;
-  let productsError;
-  let products;
+  const [color, setColor] = useState<Partial<Color>>({});
+  const [size, setSize] = useState("");
+  const [brand, setBrand] = useState("");
+  const [price, setPrice] = useState("");
+
+  const [products, setProducts] = useState([]);
+
+  const { data: brands, error: brandsError } = useGetBrandsQuery();
+  const {
+    data: colors,
+    error: colorsError,
+    isLoading: colorsLoading,
+  } = useGetColorsQuery();
+  const { data: sizes, error: sizesError } = useGetSizesQuery();
+
+  const [getProducts, { isLoading }] = useLazyGetProductsQuery();
+
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+
+  const category = queryParams.get("category");
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        // Construct query parameters
+        const params = new URLSearchParams();
+
+        params.append("category", category);
+        if (color) params.append("colors", color?.name || "");
+        if (size) params.append("sizes", size);
+        if (brand) params.append("brand", brand);
+        if (price) params.append("price", price);
+
+        const queryString = params.toString();
+
+        // Fetch data with query parameters
+        const { data } = await getProducts(`?${queryString}`);
+        setProducts(data?.data || []);
+      } catch (error) {
+        console.error(error);
+        toast.error("Something went wrong");
+      }
+    };
+    fetchProducts();
+  }, [brand, category, color, getProducts, price, size]);
+
+  const error = brandsError || colorsError || sizesError;
+  if (error) {
+    const err = error as ErrorResponse;
+    console.error(err);
+    toast.error(err.data?.message || "An error occurred while fetching data");
+  }
 
   return (
     <div className="bg-white">
@@ -91,7 +134,8 @@ export default function ProductsFilters() {
           <Dialog
             as="div"
             className="relative z-40 lg:hidden"
-            onClose={setMobileMenuOpen}>
+            onClose={setMobileMenuOpen}
+          >
             <Transition.Child
               as={Fragment}
               enter="transition-opacity ease-linear duration-300"
@@ -99,7 +143,8 @@ export default function ProductsFilters() {
               enterTo="opacity-100"
               leave="transition-opacity ease-linear duration-300"
               leaveFrom="opacity-100"
-              leaveTo="opacity-0">
+              leaveTo="opacity-0"
+            >
               <div className="fixed inset-0 bg-black bg-opacity-25" />
             </Transition.Child>
 
@@ -111,15 +156,17 @@ export default function ProductsFilters() {
                 enterTo="translate-x-0"
                 leave="transition ease-in-out duration-300 transform"
                 leaveFrom="translate-x-0"
-                leaveTo="-translate-x-full">
-                <Dialog.Panel className="relative flex w-full max-w-xs flex-col overflow-y-auto bg-white pb-12 shadow-xl">
+                leaveTo="-translate-x-full"
+              >
+                <Dialog.Panel className="relative flex flex-col w-full max-w-xs pb-12 overflow-y-auto bg-white shadow-xl">
                   <div className="flex px-4 pt-5 pb-2">
                     <button
                       type="button"
-                      className="-m-2 inline-flex items-center justify-center rounded-md p-2 text-gray-400"
-                      onClick={() => setMobileMenuOpen(false)}>
+                      className="inline-flex items-center justify-center p-2 -m-2 text-gray-400 rounded-md"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
                       <span className="sr-only">Close menu</span>
-                      <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                      <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   </div>
                 </Dialog.Panel>
@@ -135,7 +182,8 @@ export default function ProductsFilters() {
           <Dialog
             as="div"
             className="relative z-40 lg:hidden"
-            onClose={setMobileFiltersOpen}>
+            onClose={setMobileFiltersOpen}
+          >
             <Transition.Child
               as={Fragment}
               enter="transition-opacity ease-linear duration-300"
@@ -143,7 +191,8 @@ export default function ProductsFilters() {
               enterTo="opacity-100"
               leave="transition-opacity ease-linear duration-300"
               leaveFrom="opacity-100"
-              leaveTo="opacity-0">
+              leaveTo="opacity-0"
+            >
               <div className="fixed inset-0 bg-black bg-opacity-25" />
             </Transition.Child>
 
@@ -155,18 +204,20 @@ export default function ProductsFilters() {
                 enterTo="translate-x-0"
                 leave="transition ease-in-out duration-300 transform"
                 leaveFrom="translate-x-0"
-                leaveTo="translate-x-full">
-                <Dialog.Panel className="relative ml-auto flex h-full w-full max-w-xs flex-col overflow-y-auto bg-white py-4 pb-12 shadow-xl">
+                leaveTo="translate-x-full"
+              >
+                <Dialog.Panel className="relative flex flex-col w-full h-full max-w-xs py-4 pb-12 ml-auto overflow-y-auto bg-white shadow-xl">
                   <div className="flex items-center justify-between px-4">
                     <h2 className="text-lg font-medium text-gray-900">
                       Filters
                     </h2>
                     <button
                       type="button"
-                      className="-mr-2 flex h-10 w-10 items-center justify-center rounded-md bg-white p-2 text-gray-400"
-                      onClick={() => setMobileFiltersOpen(false)}>
+                      className="flex items-center justify-center w-10 h-10 p-2 -mr-2 text-gray-400 bg-white rounded-md"
+                      onClick={() => setMobileFiltersOpen(false)}
+                    >
                       <span className="sr-only">Close menu</span>
-                      <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                      <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   </div>
 
@@ -175,61 +226,68 @@ export default function ProductsFilters() {
                     {/*  */}
                     <Disclosure
                       as="div"
-                      key="disclosure"
-                      className="border-t border-gray-200 px-4 py-6">
+                      className="px-4 py-6 border-t border-gray-200"
+                    >
                       {({ open }) => (
                         <>
-                          <h3 className="-mx-2 -my-3 flow-root">
-                            <Disclosure.Button className="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
+                          <h3 className="flow-root -mx-2 -my-3">
+                            <Disclosure.Button className="flex items-center justify-between w-full px-2 py-3 text-gray-400 bg-white hover:text-gray-500">
                               <span className="font-medium text-gray-900">
                                 Choose Color
                               </span>
-                              <span className="ml-6 flex items-center">
+                              <span className="flex items-center ml-6">
                                 {open ? (
                                   <MinusIcon
-                                    className="h-5 w-5"
+                                    className="w-5 h-5"
                                     aria-hidden="true"
                                   />
                                 ) : (
                                   <PlusIcon
-                                    className="h-5 w-5"
+                                    className="w-5 h-5"
                                     aria-hidden="true"
                                   />
                                 )}
                               </span>
                             </Disclosure.Button>
                           </h3>
-
+                          {!open && setColor("")}
                           <Disclosure.Panel className="pt-6">
                             <div className="space-y-6">
                               {/* Any Color */}
                               {colorsLoading ? (
                                 <h2>Loading...</h2>
-                              ) : colorsError ? (
-                                <h2>{colorsError}</h2>
                               ) : (
                                 <RadioGroup onChange={setColor}>
-                                  <div className="flex items-start  flex-row flex-wrap">
-                                    {colors?.map((color) => (
+                                  <div className="flex flex-row flex-wrap items-start">
+                                    {colors?.map(color => (
                                       <RadioGroup.Option
-                                        key={color?._id}
+                                        key={color?.id}
                                         value={color}
                                         className={({ active, checked }) =>
                                           classNames(
                                             active && checked
-                                              ? "ring ring-offset-1"
+                                              ? "ring-2 ring-offset-1 ring-blue-500"
                                               : "",
-                                            !active && checked ? "ring-2" : "",
-                                            " relative  rounded-full flex  flex-col items-center justify-center cursor-pointer focus:outline-none m-2"
+                                            !active && checked
+                                              ? "ring-2 ring-blue-500"
+                                              : "",
+                                            "relative rounded-full flex flex-col items-center justify-center cursor-pointer focus:outline-none m-2"
                                           )
-                                        }>
-                                        <span
-                                          style={{
-                                            backgroundColor: color?.name,
-                                          }}
-                                          aria-hidden="true"
-                                          className="h-8 w-8 border border-black border-opacity-10 rounded-full"
-                                        />
+                                        }
+                                      >
+                                        {isValidColor(color?.name) ? (
+                                          <span
+                                            style={{
+                                              backgroundColor: color?.name,
+                                            }}
+                                            aria-hidden="true"
+                                            className="w-8 h-8 border border-black rounded-full border-opacity-10"
+                                          />
+                                        ) : (
+                                          <span className="px-2 py-1 text-sm font-medium text-gray-900 uppercase border border-black rounded-full border-opacity-10">
+                                            {color?.name}
+                                          </span>
+                                        )}
                                       </RadioGroup.Option>
                                     ))}
                                   </div>
@@ -244,43 +302,45 @@ export default function ProductsFilters() {
                     {/* price categories section */}
                     <Disclosure
                       as="div"
-                      key="disclosure"
-                      className="border-t border-gray-200 px-4 py-6">
+                      className="px-4 py-6 border-t border-gray-200"
+                    >
                       {({ open }) => (
                         <>
-                          <h3 className="-mx-2 -my-3 flow-root">
-                            <Disclosure.Button className="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
+                          <h3 className="flow-root -mx-2 -my-3">
+                            <Disclosure.Button className="flex items-center justify-between w-full px-2 py-3 text-gray-400 bg-white hover:text-gray-500">
                               <span className="font-medium text-gray-900">
                                 Price
                               </span>
-                              <span className="ml-6 flex items-center">
+                              <span className="flex items-center ml-6">
                                 {open ? (
                                   <MinusIcon
-                                    className="h-5 w-5"
+                                    className="w-5 h-5"
                                     aria-hidden="true"
                                   />
                                 ) : (
                                   <PlusIcon
-                                    className="h-5 w-5"
+                                    className="w-5 h-5"
                                     aria-hidden="true"
                                   />
                                 )}
                               </span>
                             </Disclosure.Button>
                           </h3>
+                          {!open && setPrice("")}
                           <Disclosure.Panel className="pt-6">
-                            <div className="space-y-6 mt-2">
-                              {allPrice?.map((price) => (
+                            <div className="mt-2 space-y-6">
+                              {prices?.map(price => (
                                 <div
-                                  key={Math.random()}
-                                  className="flex items-center">
+                                  key={price.amount}
+                                  className="flex items-center"
+                                >
                                   <input
                                     onClick={() => setPrice(price?.amount)}
                                     name="price"
                                     type="radio"
-                                    className="h-4 w-4 rounded border-gray-300 cursor-pointer text-indigo-600 focus:ring-indigo-500"
+                                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded cursor-pointer focus:ring-indigo-500"
                                   />
-                                  <label className="ml-3 min-w-0 flex-1 text-gray-500">
+                                  <label className="flex-1 min-w-0 ml-3 text-gray-500">
                                     $ {price?.amount}
                                   </label>
                                 </div>
@@ -295,43 +355,45 @@ export default function ProductsFilters() {
                     {/* product brand categories section categories section */}
                     <Disclosure
                       as="div"
-                      key="disclosure"
-                      className="border-t border-gray-200 px-4 py-6">
+                      className="px-4 py-6 border-t border-gray-200"
+                    >
                       {({ open }) => (
                         <>
-                          <h3 className="-mx-2 -my-3 flow-root">
-                            <Disclosure.Button className="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
+                          <h3 className="flow-root -mx-2 -my-3">
+                            <Disclosure.Button className="flex items-center justify-between w-full px-2 py-3 text-gray-400 bg-white hover:text-gray-500">
                               <span className="font-medium text-gray-900">
                                 Brand
                               </span>
-                              <span className="ml-6 flex items-center">
+                              <span className="flex items-center ml-6">
                                 {open ? (
                                   <MinusIcon
-                                    className="h-5 w-5"
+                                    className="w-5 h-5"
                                     aria-hidden="true"
                                   />
                                 ) : (
                                   <PlusIcon
-                                    className="h-5 w-5"
+                                    className="w-5 h-5"
                                     aria-hidden="true"
                                   />
                                 )}
                               </span>
                             </Disclosure.Button>
                           </h3>
+                          {!open && setBrand("")}
                           <Disclosure.Panel className="pt-6">
                             <div className="space-y-2">
-                              {brands?.map((brand) => (
+                              {brands?.map(brand => (
                                 <div
-                                  key={brand?._id}
-                                  className="flex items-center">
+                                  key={brand?.id}
+                                  className="flex items-center"
+                                >
                                   <input
                                     onClick={() => setBrand(brand?.name)}
                                     name="brand"
                                     type="radio"
-                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                                   />
-                                  <label className="ml-3 min-w-0 flex-1 text-gray-500">
+                                  <label className="flex-1 min-w-0 ml-3 text-gray-500">
                                     {brand?.name}
                                   </label>
                                 </div>
@@ -346,42 +408,46 @@ export default function ProductsFilters() {
                     {/* product size categories   */}
                     <Disclosure
                       as="div"
-                      key="disclosure"
-                      className="border-t border-gray-200 px-4 py-6">
+                      className="px-4 py-6 border-t border-gray-200"
+                    >
                       {({ open }) => (
                         <>
-                          <h3 className="-mx-2 -my-3 flow-root">
-                            <Disclosure.Button className="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
+                          <h3 className="flow-root -mx-2 -my-3">
+                            <Disclosure.Button className="flex items-center justify-between w-full px-2 py-3 text-gray-400 bg-white hover:text-gray-500">
                               <span className="font-medium text-gray-900">
                                 Size
                               </span>
-                              <span className="ml-6 flex items-center">
+                              <span className="flex items-center ml-6">
                                 {open ? (
                                   <MinusIcon
-                                    className="h-5 w-5"
+                                    className="w-5 h-5"
                                     aria-hidden="true"
                                   />
                                 ) : (
                                   <PlusIcon
-                                    className="h-5 w-5"
+                                    className="w-5 h-5"
                                     aria-hidden="true"
                                   />
                                 )}
                               </span>
                             </Disclosure.Button>
                           </h3>
+                          {!open && setSize("")}
                           <Disclosure.Panel className="pt-6">
                             <div className="space-y-6">
-                              {sizeCategories.map((option) => (
-                                <div key={option} className="flex items-center">
+                              {sizes?.map(size => (
+                                <div
+                                  key={size.id}
+                                  className="flex items-center"
+                                >
                                   <input
                                     type="radio"
                                     name="size"
-                                    onClick={() => setSize(option)}
-                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    onClick={() => setSize(size.name)}
+                                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                                   />
-                                  <label className="ml-3 min-w-0 flex-1 text-gray-500">
-                                    {option}
+                                  <label className="flex-1 min-w-0 ml-3 text-gray-500">
+                                    {size.name}
                                   </label>
                                 </div>
                               ))}
@@ -399,8 +465,8 @@ export default function ProductsFilters() {
           </Dialog>
         </Transition.Root>
 
-        <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-baseline justify-between border-b border-gray-200 pt-24 pb-6">
+        <main className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div className="flex items-baseline justify-between pt-24 pb-6 border-b border-gray-200">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900">
               Product Filters
             </h1>
@@ -408,10 +474,10 @@ export default function ProductsFilters() {
             <div className="flex items-center">
               <Menu as="div" className="relative inline-block text-left">
                 <div>
-                  <Menu.Button className="group inline-flex justify-center text-sm font-medium text-gray-700 hover:text-gray-900">
+                  <Menu.Button className="inline-flex justify-center text-sm font-medium text-gray-700 group hover:text-gray-900">
                     Sort
                     <ChevronDownIcon
-                      className="-mr-1 ml-1 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
+                      className="flex-shrink-0 w-5 h-5 ml-1 -mr-1 text-gray-400 group-hover:text-gray-500"
                       aria-hidden="true"
                     />
                   </Menu.Button>
@@ -425,10 +491,11 @@ export default function ProductsFilters() {
                   enterTo="transform opacity-100 scale-100"
                   leave="transition ease-in duration-75"
                   leaveFrom="transform opacity-100 scale-100"
-                  leaveTo="transform opacity-0 scale-95">
-                  <Menu.Items className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  leaveTo="transform opacity-0 scale-95"
+                >
+                  <Menu.Items className="absolute right-0 z-10 w-40 mt-2 origin-top-right bg-white rounded-md shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none">
                     <div className="py-1">
-                      {sortOptions.map((option) => (
+                      {sortOptions?.map(option => (
                         <Menu.Item key={option.name}>
                           {({ active }) => (
                             <a
@@ -439,7 +506,8 @@ export default function ProductsFilters() {
                                   : "text-gray-500",
                                 active ? "bg-gray-100" : "",
                                 "block px-4 py-2 text-sm"
-                              )}>
+                              )}
+                            >
                               {option.name}
                             </a>
                           )}
@@ -452,10 +520,11 @@ export default function ProductsFilters() {
 
               <button
                 type="button"
-                className="-m-2 ml-4 p-2 text-gray-400 hover:text-gray-500 sm:ml-6 lg:hidden"
-                onClick={() => setMobileFiltersOpen(true)}>
+                className="p-2 ml-4 -m-2 text-gray-400 hover:text-gray-500 sm:ml-6 lg:hidden"
+                onClick={() => setMobileFiltersOpen(true)}
+              >
                 <span className="sr-only">Filters</span>
-                <FunnelIcon className="h-5 w-5" aria-hidden="true" />
+                <FunnelIcon className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -473,59 +542,68 @@ export default function ProductsFilters() {
                 {/* colors categories Desktop section */}
                 <Disclosure
                   as="div"
-                  key="disclosure"
-                  className="border-t border-gray-200 px-4 py-6">
+                  className="px-4 py-6 border-t border-gray-200"
+                >
                   {({ open }) => (
                     <>
-                      <h3 className="-mx-2 -my-3 flow-root">
-                        <Disclosure.Button className="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
+                      <h3 className="flow-root -mx-2 -my-3">
+                        <Disclosure.Button className="flex items-center justify-between w-full px-2 py-3 text-gray-400 bg-white hover:text-gray-500">
                           <span className="font-medium text-gray-900">
-                            Colors Categories
+                            Color
                           </span>
-                          <span className="ml-6 flex items-center">
+                          <span className="flex items-center ml-6">
                             {open ? (
                               <MinusIcon
-                                className="h-5 w-5"
+                                className="w-5 h-5"
                                 aria-hidden="true"
                               />
                             ) : (
                               <PlusIcon
-                                className="h-5 w-5"
+                                className="w-5 h-5"
                                 aria-hidden="true"
                               />
                             )}
                           </span>
                         </Disclosure.Button>
                       </h3>
-
+                      {!open && setColor("")}
                       <Disclosure.Panel className="pt-6">
                         <div className="space-y-6">
                           {/* Any Color */}
                           {colorsLoading ? (
                             <h2>Loading...</h2>
-                          ) : colorsError ? (
-                            <h2>{colorsError}</h2>
                           ) : (
                             <RadioGroup onChange={setColor}>
-                              <div className="flex items-start  flex-row flex-wrap">
-                                {colors?.map((color) => (
+                              <div className="flex flex-row flex-wrap items-start">
+                                {colors?.map(color => (
                                   <RadioGroup.Option
                                     key={color?.id}
                                     value={color}
                                     className={({ active, checked }) =>
                                       classNames(
                                         active && checked
-                                          ? "ring ring-offset-1"
+                                          ? "ring-2 ring-offset-1 ring-blue-500"
                                           : "",
-                                        !active && checked ? "ring-2" : "",
-                                        " relative  rounded-full flex  flex-col items-center justify-center cursor-pointer focus:outline-none m-2"
+                                        !active && checked
+                                          ? "ring-2 ring-blue-500"
+                                          : "",
+                                        "relative rounded-full flex flex-col items-center justify-center cursor-pointer focus:outline-none m-2"
                                       )
-                                    }>
-                                    <span
-                                      style={{ backgroundColor: color?.name }}
-                                      aria-hidden="true"
-                                      className="h-8 w-8 border border-black border-opacity-10 rounded-full"
-                                    />
+                                    }
+                                  >
+                                    {isValidColor(color?.name) ? (
+                                      <span
+                                        style={{
+                                          backgroundColor: color?.name,
+                                        }}
+                                        aria-hidden="true"
+                                        className="w-8 h-8 border border-black rounded-full border-opacity-10"
+                                      />
+                                    ) : (
+                                      <span className="px-2 py-1 text-sm font-medium text-gray-900 uppercase border border-black rounded-full border-opacity-10">
+                                        {color?.name}
+                                      </span>
+                                    )}
                                   </RadioGroup.Option>
                                 ))}
                               </div>
@@ -541,41 +619,45 @@ export default function ProductsFilters() {
                 {/* price categories section Desktop*/}
                 <Disclosure
                   as="div"
-                  key="disclosure"
-                  className="border-t border-gray-200 px-4 py-6">
+                  className="px-4 py-6 border-t border-gray-200"
+                >
                   {({ open }) => (
                     <>
-                      <h3 className="-mx-2 -my-3 flow-root">
-                        <Disclosure.Button className="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
+                      <h3 className="flow-root -mx-2 -my-3">
+                        <Disclosure.Button className="flex items-center justify-between w-full px-2 py-3 text-gray-400 bg-white hover:text-gray-500">
                           <span className="font-medium text-gray-900">
                             Price
                           </span>
-                          <span className="ml-6 flex items-center">
+                          <span className="flex items-center ml-6">
                             {open ? (
                               <MinusIcon
-                                className="h-5 w-5"
+                                className="w-5 h-5"
                                 aria-hidden="true"
                               />
                             ) : (
                               <PlusIcon
-                                className="h-5 w-5"
+                                className="w-5 h-5"
                                 aria-hidden="true"
                               />
                             )}
                           </span>
                         </Disclosure.Button>
                       </h3>
+                      {!open && setPrice("")}
                       <Disclosure.Panel className="pt-6">
-                        <div className="space-y-6 mt-2">
-                          {allPrice?.map((price) => (
-                            <div className="flex items-center">
+                        <div className="mt-2 space-y-6">
+                          {prices?.map(price => (
+                            <div
+                              className="flex items-center"
+                              key={price.amount}
+                            >
                               <input
                                 onClick={() => setPrice(price?.amount)}
                                 name="price"
                                 type="radio"
-                                className="h-4 w-4 rounded border-gray-300 cursor-pointer text-indigo-600 focus:ring-indigo-500"
+                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded cursor-pointer focus:ring-indigo-500"
                               />
-                              <label className="ml-3 min-w-0 flex-1 text-gray-500">
+                              <label className="flex-1 min-w-0 ml-3 text-gray-500">
                                 $ {price?.amount}
                               </label>
                             </div>
@@ -590,41 +672,42 @@ export default function ProductsFilters() {
                 {/* product brand categories section categories section */}
                 <Disclosure
                   as="div"
-                  key="disclosure"
-                  className="border-t border-gray-200 px-4 py-6">
+                  className="px-4 py-6 border-t border-gray-200"
+                >
                   {({ open }) => (
                     <>
-                      <h3 className="-mx-2 -my-3 flow-root">
-                        <Disclosure.Button className="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
+                      <h3 className="flow-root -mx-2 -my-3">
+                        <Disclosure.Button className="flex items-center justify-between w-full px-2 py-3 text-gray-400 bg-white hover:text-gray-500">
                           <span className="font-medium text-gray-900">
                             Brand
                           </span>
-                          <span className="ml-6 flex items-center">
+                          <span className="flex items-center ml-6">
                             {open ? (
                               <MinusIcon
-                                className="h-5 w-5"
+                                className="w-5 h-5"
                                 aria-hidden="true"
                               />
                             ) : (
                               <PlusIcon
-                                className="h-5 w-5"
+                                className="w-5 h-5"
                                 aria-hidden="true"
                               />
                             )}
                           </span>
                         </Disclosure.Button>
                       </h3>
+                      {!open && setBrand("")}
                       <Disclosure.Panel className="pt-6">
                         <div className="space-y-2">
-                          {brands?.map((brand) => (
-                            <div key={brand?._id} className="flex items-center">
+                          {brands?.map(brand => (
+                            <div key={brand?.id} className="flex items-center">
                               <input
                                 onClick={() => setBrand(brand?.name)}
                                 name="brand"
                                 type="radio"
-                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                               />
-                              <label className="ml-3 min-w-0 flex-1 text-gray-500">
+                              <label className="flex-1 min-w-0 ml-3 text-gray-500">
                                 {brand?.name}
                               </label>
                             </div>
@@ -639,42 +722,43 @@ export default function ProductsFilters() {
                 {/* product size categories  desktop */}
                 <Disclosure
                   as="div"
-                  key="disclosure"
-                  className="border-t border-gray-200 px-4 py-6">
+                  className="px-4 py-6 border-t border-gray-200"
+                >
                   {({ open }) => (
                     <>
-                      <h3 className="-mx-2 -my-3 flow-root">
-                        <Disclosure.Button className="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
+                      <h3 className="flow-root -mx-2 -my-3">
+                        <Disclosure.Button className="flex items-center justify-between w-full px-2 py-3 text-gray-400 bg-white hover:text-gray-500">
                           <span className="font-medium text-gray-900">
                             Size
                           </span>
-                          <span className="ml-6 flex items-center">
+                          <span className="flex items-center ml-6">
                             {open ? (
                               <MinusIcon
-                                className="h-5 w-5"
+                                className="w-5 h-5"
                                 aria-hidden="true"
                               />
                             ) : (
                               <PlusIcon
-                                className="h-5 w-5"
+                                className="w-5 h-5"
                                 aria-hidden="true"
                               />
                             )}
                           </span>
                         </Disclosure.Button>
                       </h3>
+                      {!open && setSize("")}
                       <Disclosure.Panel className="pt-6">
                         <div className="space-y-6">
-                          {sizeCategories.map((option) => (
-                            <div key={option} className="flex items-center">
+                          {sizes?.map(size => (
+                            <div key={size?.id} className="flex items-center">
                               <input
                                 type="radio"
                                 name="size"
-                                onClick={() => setSize(option)}
-                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                onClick={() => setSize(size.name)}
+                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                               />
-                              <label className="ml-3 min-w-0 flex-1 text-gray-500">
-                                {option}
+                              <label className="flex-1 min-w-0 ml-3 text-gray-500">
+                                {size.name}
                               </label>
                             </div>
                           ))}
@@ -687,10 +771,8 @@ export default function ProductsFilters() {
               </form>
 
               {/* Product grid */}
-              {productsLoading ? (
+              {isLoading ? (
                 <h2 className="text-xl">Loading...</h2>
-              ) : productsError ? (
-                <h2 className="text-red-500">{productsError}</h2>
               ) : (
                 <Products products={products} />
               )}

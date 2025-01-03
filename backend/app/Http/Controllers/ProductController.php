@@ -16,8 +16,8 @@ class ProductController extends Controller {
   public function index(Request $request) {
     // Get query parameters
     $name = $request->query('name');
-    $categoryId = $request->query('category_id');
-    $brandId = $request->query('brand_id');
+    $categoryName = $request->query('category');
+    $brandName = $request->query('brand');
     $colorNames = $request->query('colors');
     $sizeNames = $request->query('sizes');
     $priceRange = $request->query('price');
@@ -29,11 +29,15 @@ class ProductController extends Controller {
     if ($name) {
       $query->where('name', 'like', '%' . $name . '%');
     }
-    if ($categoryId) {
-      $query->where('category_id', $categoryId);
+    if ($categoryName) {
+      $query->whereHas('category', function ($q) use ($categoryName) {
+        $q->where('name', $categoryName);
+      });
     }
-    if ($brandId) {
-      $query->where('brand_id', $brandId);
+    if ($brandName) {
+      $query->whereHas('brand', function ($q) use ($brandName) {
+        $q->where('name', $brandName);
+      });
     }
     if ($colorNames) {
       $colorsArray = explode(',', $colorNames);

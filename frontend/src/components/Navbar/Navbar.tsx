@@ -1,20 +1,25 @@
 import { Fragment, useMemo, useState } from "react";
 import { Dialog, Popover, Transition } from "@headlessui/react";
 import {
+  ArrowRightStartOnRectangleIcon,
   Bars3Icon,
   ShoppingCartIcon,
   UserIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { Link } from "react-router-dom";
+import { ErrorResponse, Link } from "react-router-dom";
 import logo from "./logo3.png";
 import { useGetCategoriesQuery } from "../../redux/api/categories";
-import { useAppSelector } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { useGetCouponsQuery } from "../../redux/api/coupons";
+import { toast } from "react-toastify";
+import { logout } from "../../redux/features/auth/authSlice";
+import { useLogoutMutation } from "../../redux/api/auth";
 
 const Navbar: React.FC = () => {
   const { data: categories } = useGetCategoriesQuery();
   const { data: coupons } = useGetCouponsQuery();
+  const [logOut] = useLogoutMutation();
 
   const bestCoupon = useMemo(() => {
     if (!coupons) return null;
@@ -46,6 +51,21 @@ const Navbar: React.FC = () => {
 
   //get cart items from local storage
   const cartItems = useAppSelector(state => state.cart.products);
+
+  const dispatch = useAppDispatch();
+
+  const handleLogout = async () => {
+    // Clear user data
+    try {
+      await logOut().unwrap();
+      dispatch(logout());
+      toast.info("Logged Out!");
+    } catch (error) {
+      const err = error as ErrorResponse;
+      console.log(err);
+      toast.error(err.data.message || "Error logging out!");
+    }
+  };
 
   return (
     <div className="bg-white">
@@ -89,52 +109,52 @@ const Navbar: React.FC = () => {
                     <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                   </button>
                 </div>
-                {/* mobile category menu links */}
-                <div className="px-4 py-6 space-y-6 border-t border-gray-200">
-                  {/* {navigation.pages.map((page) => (
-                    <div key={page.name} className="flow-root">
-                      <a
-                        href={page.href}
-                        className="block p-2 -m-2 font-medium text-gray-900">
-                        {page.name}
-                      </a>
-                    </div>
-                  ))} */}
 
-                  {categories?.map(category => {
-                    return (
-                      <Link
-                        key={category?.id} // Add the key here
-                        to={`/products-filters?category=${category?.name}`}
-                        className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-800"
-                      >
-                        {category?.name.toUpperCase()}
-                      </Link>
-                    );
-                  })}
+                {/* Mobile category menu links */}
+                <div className="px-4 py-6 space-y-6 border-t border-gray-200">
+                  {categories?.map(category => (
+                    <Link
+                      key={category?.id}
+                      to={`/products-filters?category=${category?.name}`}
+                      className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-800"
+                    >
+                      {category?.name.toUpperCase()}
+                    </Link>
+                  ))}
                 </div>
 
-                {/* mobile links register/login */}
-                {!userInfo && (
-                  <div className="px-4 py-6 space-y-6 border-t border-gray-200">
+                {/* Mobile links register/login or logout */}
+                <div className="px-4 py-6 space-y-6 border-t border-gray-200">
+                  {!userInfo ? (
+                    <>
+                      <div className="flow-root">
+                        <Link
+                          to="/register"
+                          className="block p-2 -m-2 font-medium text-gray-900"
+                        >
+                          Create an account
+                        </Link>
+                      </div>
+                      <div className="flow-root">
+                        <Link
+                          to="/login"
+                          className="block p-2 -m-2 font-medium text-gray-900"
+                        >
+                          Sign in
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
                     <div className="flow-root">
-                      <Link
-                        to="/register"
+                      <button
+                        onClick={handleLogout}
                         className="block p-2 -m-2 font-medium text-gray-900"
                       >
-                        Create an account
-                      </Link>
+                        Logout
+                      </button>
                     </div>
-                    <div className="flow-root">
-                      <Link
-                        to="/login"
-                        className="block p-2 -m-2 font-medium text-gray-900"
-                      >
-                        Sign in
-                      </Link>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <div className="px-4 py-6 space-y-6 border-t border-gray-200"></div>
               </Dialog.Panel>
@@ -184,7 +204,7 @@ const Navbar: React.FC = () => {
             </div>
           )}
 
-          {/* Deskto Navigation */}
+          {/* Desktop Navigation */}
           <div className="bg-white">
             <div className="border-b border-gray-200">
               <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -210,7 +230,7 @@ const Navbar: React.FC = () => {
                             <Link
                               key={category?.id}
                               to={`/products-filters?category=${category?.name}`}
-                              className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-800"
+                              className="flex items-center text-sm font-medium text-gray-700 transition duration-150 ease-in-out hover:scale-105"
                             >
                               {category?.name.toUpperCase()}
                             </Link>
@@ -245,16 +265,30 @@ const Navbar: React.FC = () => {
                     <div className="flex items-center lg:ml-8">
                       {userInfo && (
                         <div className="flex space-x-8">
+                          {/* User Profile Link */}
                           <div className="flex">
                             <Link
                               to="/customer-profile"
-                              className="p-2 -m-2 text-gray-400 hover:text-gray-500"
+                              className="p-2 -m-2 text-gray-400 transition duration-150 ease-in-out transform hover:text-blue-500 hover:scale-110"
                             >
                               <UserIcon
                                 className="w-6 h-6"
                                 aria-hidden="true"
                               />
                             </Link>
+                          </div>
+
+                          {/* Logout Icon */}
+                          <div className="flex">
+                            <button
+                              onClick={handleLogout}
+                              className="p-2 -m-2 text-gray-400 transition duration-150 ease-in-out transform hover:text-red-500 hover:scale-110"
+                            >
+                              <ArrowRightStartOnRectangleIcon
+                                className="w-6 h-6"
+                                aria-hidden="true"
+                              />
+                            </button>
                           </div>
                         </div>
                       )}
@@ -263,14 +297,15 @@ const Navbar: React.FC = () => {
                         className="w-px h-6 mx-4 bg-gray-200 lg:mx-6"
                         aria-hidden="true"
                       />
-                      {/* login shopping cart mobile */}
+
+                      {/* Shopping Cart */}
                       <div className="flow-root">
                         <Link
                           to="/shopping-cart"
-                          className="flex items-center p-2 -m-2 group"
+                          className="flex items-center p-2 -m-2 group "
                         >
                           <ShoppingCartIcon
-                            className="flex-shrink-0 w-6 h-6 text-gray-400 group-hover:text-gray-500"
+                            className="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-150 ease-in-out transform group-hover:text-green-500 hover:scale-110"
                             aria-hidden="true"
                           />
                           <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
