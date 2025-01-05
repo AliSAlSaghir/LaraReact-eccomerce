@@ -155,12 +155,12 @@ const couponsLinks: Link[] = [
 ];
 
 const AttributesLinks: Link[] = [
+  { name: "Add Attribute", href: "add-attribute", icon: CogIcon },
   {
     name: "All Attributes",
     href: "all-attributes",
     icon: QuestionMarkCircleIcon,
   },
-  { name: "Add Attribute", href: "add-attribute", icon: CogIcon },
 ];
 function classNames(...classes: (string | boolean | null | undefined)[]) {
   return classes.filter(Boolean).join(" ");

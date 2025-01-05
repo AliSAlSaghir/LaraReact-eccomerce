@@ -28,6 +28,7 @@ import AdminRoute from "./components/Auth/AdminRoute";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import AddAttribute from "./components/Admin/Attributes/AddAttribute";
 import ManageAttributes from "./components/Admin/Attributes/ManageAttributes";
+import AllProducts from "./components/HomePage/AllProducts";
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -76,6 +77,7 @@ const App: React.FC = () => {
         <Route index element={<HomePage />} />
         <Route path="/products-filters" element={<ProductsFilters />} />
         <Route path="/products/:id" element={<Product />} />
+        <Route path="/products" element={<AllProducts />} />
         <Route path="/all-categories" element={<AllCategories />} />
         {/* shopping cart */}
         <Route path="/shopping-cart" element={<ShoppingCart />} />

@@ -17,13 +17,13 @@ const HomeCategories = () => {
     <>
       <div className="flow-root mt-4">
         <div className="-my-2">
-          <div className="box-content relative py-2 overflow-x-auto h-80 xl:overflow-visible">
-            <div className="absolute flex px-4 space-x-8 min-w-screen-xl sm:px-6 lg:px-8 xl:relative xl:grid xl:grid-cols-5 xl:gap-x-8 xl:space-x-0 xl:px-0">
+          <div className="box-content relative py-2">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 xl:gap-x-8 xl:space-x-0 xl:px-0">
               {categoriesToShow?.map(category => (
                 <Link
                   key={category.name}
                   to={`/products-filters?category=${category.name}`}
-                  className="relative flex flex-col w-56 p-6 overflow-hidden transition-transform duration-300 rounded-lg shadow-md h-80 hover:shadow-lg hover:scale-105 xl:w-auto"
+                  className="relative flex flex-col w-full p-6 overflow-hidden transition-transform duration-300 rounded-lg shadow-md h-80 hover:shadow-lg hover:scale-105"
                 >
                   {/* Background Image */}
                   <span aria-hidden="true" className="absolute inset-0">
