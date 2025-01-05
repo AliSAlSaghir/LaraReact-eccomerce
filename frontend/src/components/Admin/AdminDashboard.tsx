@@ -59,7 +59,7 @@ const ordersLinks: Link[] = [
     ),
   },
   {
-    name: "Customers",
+    name: "Users",
     href: "customers",
     icon: () => (
       <svg
@@ -170,9 +170,11 @@ const AdminDashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   const { userInfo } = useAppSelector(state => state.auth);
+
   return (
     <>
       <div className="min-h-full">
+        {/* Mobile Sidebar */}
         <Transition.Root show={sidebarOpen} as={Fragment}>
           <Dialog
             as="div"
@@ -230,14 +232,14 @@ const AdminDashboard: React.FC = () => {
                     className="flex flex-col flex-1 mt-5 overflow-y-auto divide-y divide-cyan-800"
                     aria-label="Sidebar"
                   >
-                    {/* orders links mobile */}
+                    {/* Orders Links Mobile */}
                     <div className="pt-1 mt-1">
                       <div className="px-2 space-y-1">
                         {ordersLinks.map(item => (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="flex items-center px-2 py-2 text-sm font-medium leading-6 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                            className="flex items-center px-2 py-2 text-sm font-medium leading-6 transition-colors duration-200 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
                           >
                             <item.icon
                               className="w-6 h-6 mr-4 text-cyan-200"
@@ -248,8 +250,8 @@ const AdminDashboard: React.FC = () => {
                         ))}
                       </div>
                     </div>
+                    {/* Products Links Mobile */}
                     <div className="px-2 mt-8 space-y-1">
-                      {/*Products  links mobile */}
                       {productsLinks.map(item => (
                         <Link
                           key={item.name}
@@ -258,7 +260,7 @@ const AdminDashboard: React.FC = () => {
                             item.current
                               ? "bg-cyan-800 text-white"
                               : "text-cyan-100 hover:text-white hover:bg-cyan-600",
-                            "group flex items-center px-2 py-2 text-sm leading-6 font-medium rounded-md"
+                            "group flex items-center px-2 py-2 text-sm leading-6 font-medium rounded-md transition-colors duration-200"
                           )}
                           aria-current={item.current ? "page" : undefined}
                         >
@@ -270,13 +272,14 @@ const AdminDashboard: React.FC = () => {
                         </Link>
                       ))}
                     </div>
+                    {/* Coupons Links Mobile */}
                     <div className="pt-6 mt-6">
                       <div className="px-2 space-y-1">
                         {couponsLinks.map(item => (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="flex items-center px-2 py-2 text-sm font-medium leading-6 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                            className="flex items-center px-2 py-2 text-sm font-medium leading-6 transition-colors duration-200 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
                           >
                             <item.icon
                               className="w-6 h-6 mr-4 text-cyan-200"
@@ -287,14 +290,14 @@ const AdminDashboard: React.FC = () => {
                         ))}
                       </div>
                     </div>
-                    {/* Categories mobile */}
+                    {/* Categories Links Mobile */}
                     <div className="pt-3 mt-3">
                       <div className="px-2 space-y-1">
                         {AttributesLinks.map(item => (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="flex items-center px-2 py-2 text-sm font-medium leading-6 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                            className="flex items-center px-2 py-2 text-sm font-medium leading-6 transition-colors duration-200 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
                           >
                             <item.icon
                               className="w-6 h-6 mr-4 text-cyan-200"
@@ -306,32 +309,28 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
                   </nav>
-                  {/* end of mobile nav */}
                 </Dialog.Panel>
               </Transition.Child>
-              <div className="flex-shrink-0 w-14" aria-hidden="true">
-                {/* Dummy element to force sidebar to shrink to fit close icon */}
-              </div>
+              <div className="flex-shrink-0 w-14" aria-hidden="true"></div>
             </div>
           </Dialog>
         </Transition.Root>
 
-        {/* Static sidebar for desktop */}
+        {/* Static Sidebar for Desktop */}
         <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-          {/* Sidebar component, swap this element with another sidebar if you like */}
           <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto bg-cyan-900">
             <nav
               className="flex flex-col flex-1 mt-5 overflow-y-auto divide-y divide-cyan-800"
               aria-label="Sidebar"
             >
-              {/* orders links desktop */}
+              {/* Orders Links Desktop */}
               <div className="pt-1 mt-16">
                 <div className="px-2 space-y-1">
                   {ordersLinks.map(item => (
                     <Link
                       key={item.name}
                       to={item.href}
-                      className="flex items-center px-2 py-2 text-sm font-medium leading-6 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                      className="flex items-center px-2 py-2 text-sm font-medium leading-6 transition-colors duration-200 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
                     >
                       <item.icon
                         className="w-6 h-6 mr-4 text-cyan-200"
@@ -342,8 +341,8 @@ const AdminDashboard: React.FC = () => {
                   ))}
                 </div>
               </div>
+              {/* Products Links Desktop */}
               <div className="px-2 mt-8 space-y-1">
-                {/*Products  links desktop */}
                 {productsLinks.map(item => (
                   <Link
                     key={item.name}
@@ -352,7 +351,7 @@ const AdminDashboard: React.FC = () => {
                       item.current
                         ? "bg-cyan-800 text-white"
                         : "text-cyan-100 hover:text-white hover:bg-cyan-600",
-                      "group flex items-center px-2 py-2 text-sm leading-6 font-medium rounded-md"
+                      "group flex items-center px-2 py-2 text-sm leading-6 font-medium rounded-md transition-colors duration-200"
                     )}
                     aria-current={item.current ? "page" : undefined}
                   >
@@ -364,13 +363,14 @@ const AdminDashboard: React.FC = () => {
                   </Link>
                 ))}
               </div>
+              {/* Coupons Links Desktop */}
               <div className="pt-6 mt-6">
                 <div className="px-2 space-y-1">
                   {couponsLinks.map(item => (
                     <Link
                       key={item.name}
                       to={item.href}
-                      className="flex items-center px-2 py-2 text-sm font-medium leading-6 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                      className="flex items-center px-2 py-2 text-sm font-medium leading-6 transition-colors duration-200 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
                     >
                       <item.icon
                         className="w-6 h-6 mr-4 text-cyan-200"
@@ -381,14 +381,14 @@ const AdminDashboard: React.FC = () => {
                   ))}
                 </div>
               </div>
-              {/* Categories desktop */}
+              {/* Categories Links Desktop */}
               <div className="pt-3 mt-3">
                 <div className="px-2 space-y-1">
                   {AttributesLinks.map(item => (
                     <Link
                       key={item.name}
                       to={item.href}
-                      className="flex items-center px-2 py-2 text-sm font-medium leading-6 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
+                      className="flex items-center px-2 py-2 text-sm font-medium leading-6 transition-colors duration-200 rounded-md group text-cyan-100 hover:bg-cyan-600 hover:text-white"
                     >
                       <item.icon
                         className="w-6 h-6 mr-4 text-cyan-200"
@@ -403,7 +403,9 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Main Content */}
         <div className="flex flex-col flex-1 lg:pl-64">
+          {/* Top Bar */}
           <div className="flex flex-shrink-0 h-16 bg-white border-b border-gray-200 lg:border-none">
             <button
               type="button"
@@ -414,8 +416,9 @@ const AdminDashboard: React.FC = () => {
               <Bars3CenterLeftIcon className="w-6 h-6" aria-hidden="true" />
             </button>
           </div>
+
+          {/* Page Header */}
           <main className="flex-1 pb-8">
-            {/* Page header */}
             <div className="bg-white shadow">
               <div className="px-4 sm:px-6 lg:mx-auto lg:max-w-6xl lg:px-8">
                 <div className="py-6 md:flex md:items-center md:justify-between lg:border-t lg:border-gray-200">
@@ -440,7 +443,6 @@ const AdminDashboard: React.FC = () => {
                         </div>
                         <dl className="flex flex-col mt-6 sm:ml-3 sm:mt-1 sm:flex-row sm:flex-wrap">
                           <dd className="flex items-center text-sm font-medium text-gray-500 capitalize sm:mr-6">
-                            {/* Role */}
                             <svg
                               className="w-6 h-6"
                               fill="none"
@@ -457,7 +459,6 @@ const AdminDashboard: React.FC = () => {
                             </svg>
                             Role: Admin
                           </dd>
-                          {/* Date Joined */}
                           <dd className="flex items-center mt-3 text-sm font-medium text-gray-500 capitalize sm:mr-6 sm:mt-0">
                             <svg
                               className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
@@ -476,7 +477,6 @@ const AdminDashboard: React.FC = () => {
                             Date Joined:{" "}
                             {new Date(userInfo.created_at).toLocaleDateString()}
                           </dd>
-                          {/* email */}
                           <dd className="flex items-center mt-3 text-sm font-medium text-gray-500 sm:mr-6 sm:mt-0">
                             <svg
                               className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
@@ -498,23 +498,10 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  {/* <div className="flex mt-6 space-x-3 md:mt-0 md:ml-4">
-                    <button
-                      type="button"
-                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2">
-                      Add money
-                    </button>
-                    <button
-                      type="button"
-                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md shadow-sm bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2">
-                      Send money
-                    </button>
-                  </div> */}
                 </div>
               </div>
             </div>
             <Outlet />
-            {/* content */}
           </main>
         </div>
       </div>

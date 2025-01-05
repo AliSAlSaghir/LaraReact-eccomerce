@@ -36,7 +36,7 @@ export default function OrdersList() {
                 scope="col"
                 className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
               >
-                Payment Method
+                Payment Status
               </th>
               <th
                 scope="col"
@@ -66,22 +66,42 @@ export default function OrdersList() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {displayedOrders?.map(order => (
-              <tr key={order?.id}>
+              <tr
+                key={order?.id}
+                className="transition-colors duration-200 hover:bg-gray-50"
+              >
                 <td className="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                   {order?.order_number}
                   <dl className="font-normal lg:hidden">
-                    <dt className="sr-only">Payment Method</dt>
+                    <dt className="sr-only">Payment Status</dt>
                     <dd className="mt-1 text-gray-700 truncate">
-                      {order?.payment_method}
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          order?.payment_status === "paid"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {order?.payment_status}
+                      </span>
                     </dd>
                     <dt className="sr-only sm:hidden">Order Date</dt>
                     <dd className="mt-1 text-gray-500 truncate sm:hidden">
-                      {order?.created_at}
+                      {new Date(order?.created_at).toLocaleDateString() ||
+                        "N/A"}
                     </dd>
                   </dl>
                 </td>
                 <td className="hidden px-3 py-4 text-sm text-gray-500 lg:table-cell">
-                  {order?.payment_method || "N/A"}
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                      order?.payment_status === "paid"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {order?.payment_status || "N/A"}
+                  </span>
                 </td>
                 <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">
                   {new Date(order?.created_at).toLocaleDateString() || "N/A"}

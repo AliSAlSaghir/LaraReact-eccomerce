@@ -15,9 +15,12 @@ import { useGetCouponsQuery } from "../../redux/api/coupons";
 import { toast } from "react-toastify";
 import { logout } from "../../redux/features/auth/authSlice";
 import { useLogoutMutation } from "../../redux/api/auth";
+import { Cog8ToothIcon } from "@heroicons/react/20/solid";
 
 const Navbar: React.FC = () => {
   const { data: categories } = useGetCategoriesQuery();
+  const categoriesToShow = categories?.slice(0, 5) || [];
+
   const { data: coupons } = useGetCouponsQuery();
   const [logOut] = useLogoutMutation();
 
@@ -112,7 +115,7 @@ const Navbar: React.FC = () => {
 
                 {/* Mobile category menu links */}
                 <div className="px-4 py-6 space-y-6 border-t border-gray-200">
-                  {categories?.map(category => (
+                  {categoriesToShow?.map(category => (
                     <Link
                       key={category?.id}
                       to={`/products-filters?category=${category?.name}`}
@@ -182,6 +185,7 @@ const Navbar: React.FC = () => {
               </div>
             </div>
           )}
+
           {!userInfo && (
             <div className="bg-gray-900">
               <div className="flex items-center justify-between h-10 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -265,8 +269,23 @@ const Navbar: React.FC = () => {
                     <div className="flex items-center lg:ml-8">
                       {userInfo && (
                         <div className="flex space-x-8">
+                          {/* Admin Dashboard Button */}
+                          {userInfo.role === "admin" && (
+                            <div className="flex items-center">
+                              <Link
+                                to="/admin"
+                                className="p-2 -m-2 text-gray-400 transition duration-150 ease-in-out transform hover:text-yellow-500 hover:scale-110"
+                              >
+                                <Cog8ToothIcon
+                                  className="w-6 h-6"
+                                  aria-hidden="true"
+                                />
+                              </Link>
+                            </div>
+                          )}
+
                           {/* User Profile Link */}
-                          <div className="flex">
+                          <div className="flex items-center">
                             <Link
                               to="/customer-profile"
                               className="p-2 -m-2 text-gray-400 transition duration-150 ease-in-out transform hover:text-blue-500 hover:scale-110"
