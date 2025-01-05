@@ -69,7 +69,7 @@ export interface Brand {
   id: number;
   name: string;
   user_id: number;
-  image: string;
+  image: File | string;
   created_at: string | null;
   updated_at: string | null;
   product_count: number;

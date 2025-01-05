@@ -12,7 +12,7 @@ class CategoryController extends Controller {
    * Display a listing of the resource.
    */
   public function index() {
-    return response()->json(Category::latest()->get());
+    return response()->json(Category::withCount(['products as number_of_products'])->latest()->get());
   }
 
 
@@ -23,13 +23,13 @@ class CategoryController extends Controller {
     // Validate the request
     $request->validate([
       'name' => 'required|string|max:255|unique:categories,name',
-      'image' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
+      'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
     $user = auth('api')->user()->id;
 
     $imagePath = $request->hasFile('image')
-      ? $request->file('image')->store('images')
+      ? $request->file('image')->store('images', 'public')
       : "";
 
     $category = Category::create([
@@ -78,7 +78,7 @@ class CategoryController extends Controller {
       }
 
       // Store the new image and prepare for update
-      $newImagePath = $request->file('image')->store('images');
+      $newImagePath = $request->file('image')->store('images', 'public');
       $data['image'] = $newImagePath;
     }
 

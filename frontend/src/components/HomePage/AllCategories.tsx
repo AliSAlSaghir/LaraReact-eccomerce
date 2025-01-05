@@ -1,51 +1,68 @@
-import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { ErrorResponse, Link } from "react-router-dom";
+import { useGetCategoriesQuery } from "../../redux/api/categories";
+import { toast } from "react-toastify";
 
 const AllCategories = () => {
-  const {
-    categories: { categories },
-    loading,
-    error,
-  } = {};
+  const { data: categories, error } = useGetCategoriesQuery();
+
+  if (error) {
+    const err = error as ErrorResponse;
+    console.error(err);
+    toast.error(err.data?.message || "An error occurred while fetching data");
+  }
 
   return (
     <>
-      <div className="bg-white">
-        <div className="mx-auto max-w-7xl py-12 px-4 text-center sm:px-6 lg:py-16 lg:px-8">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            <span className="block">
-              Total Categories [{categories?.length}]
-            </span>
+      {/* Header Section */}
+      <div className="text-white bg-gradient-to-r from-cyan-500 to-cyan-600">
+        <div className="px-4 py-12 mx-auto text-center max-w-7xl sm:px-6 lg:py-16 lg:px-8">
+          <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+            Explore Our Categories
           </h2>
-          <p>Browse our categories and find the best products for you.</p>
+          <p className="mt-4 text-lg sm:text-xl">
+            Find the best products tailored just for you.
+          </p>
+          <p className="mt-6 text-sm sm:text-base">
+            Total Categories:{" "}
+            <span className="font-semibold">{categories?.length}</span>
+          </p>
         </div>
       </div>
-      <div className="mt-4 flow-root">
-        <div className="-my-2">
-          <div className="relative box-content h-80 overflow-x-auto py-2 xl:overflow-visible">
-            <div className="min-w-screen-xl absolute flex space-x-8 px-4 sm:px-6 lg:px-8 xl:relative xl:grid m-2  xl:grid-cols-5 xl:gap-x-8 xl:space-x-0 xl:px-0">
-              {categories?.map((category) => (
-                <Link
-                  key={category.name}
-                  to={`/products-filters?category=${category.name}`}
-                  className="relative flex h-80 w-56 flex-col mt-4 overflow-hidden rounded-lg p-6 hover:opacity-75 xl:w-auto">
-                  <span aria-hidden="true" className="absolute inset-0">
-                    <img
-                      src={category.image}
-                      alt=""
-                      className="h-full w-full object-cover object-center"
-                    />
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-gray-800 opacity-50"
-                  />
-                  <span className="relative mt-auto text-center text-xl font-bold text-white">
-                    {category.name} ({category.products.length})
-                  </span>
-                </Link>
-              ))}
-            </div>
+
+      {/* Categories Section */}
+      <div className="py-12 bg-gray-100">
+        <div className="container px-4 mx-auto sm:px-6 lg:px-8">
+          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {categories?.map(category => (
+              <Link
+                key={category.name}
+                to={`/products-filters?category=${category.name}`}
+                className="relative block overflow-hidden transition-shadow duration-300 bg-white rounded-lg shadow-md group hover:shadow-lg"
+              >
+                {/* Image Section */}
+                <img
+                  src={`http://localhost:8000/storage/${category.image}`}
+                  alt={category.name}
+                  className="object-cover w-full h-56 transition-transform duration-300 group-hover:scale-105"
+                />
+
+                {/* Overlay Gradient */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-70"
+                />
+
+                {/* Category Info */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-center">
+                  <h3 className="text-lg font-bold text-white">
+                    {category.name}
+                  </h3>
+                  <p className="text-sm text-gray-200">
+                    Products: {category?.product_count}
+                  </p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </div>

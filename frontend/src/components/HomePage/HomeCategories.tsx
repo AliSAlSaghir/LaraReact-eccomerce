@@ -1,33 +1,53 @@
-import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { ErrorResponse, Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useGetCategoriesQuery } from "../../redux/api/categories";
 
 const HomeCategories = () => {
-  const categoriesToShow = [];
+  const { data: categories, error } = useGetCategoriesQuery();
+
+  if (error) {
+    const err = error as ErrorResponse;
+    console.error(err);
+    toast.error(err.data?.message || "An error occurred while fetching data");
+  }
+
+  const categoriesToShow = categories?.slice(0, 5) || [];
 
   return (
     <>
-      <div className="mt-4 flow-root">
+      <div className="flow-root mt-4">
         <div className="-my-2">
-          <div className="relative box-content h-80 overflow-x-auto py-2 xl:overflow-visible">
-            <div className="min-w-screen-xl absolute flex space-x-8 px-4 sm:px-6 lg:px-8 xl:relative xl:grid xl:grid-cols-5 xl:gap-x-8 xl:space-x-0 xl:px-0">
-              {categoriesToShow?.map((category) => (
+          <div className="box-content relative py-2 overflow-x-auto h-80 xl:overflow-visible">
+            <div className="absolute flex px-4 space-x-8 min-w-screen-xl sm:px-6 lg:px-8 xl:relative xl:grid xl:grid-cols-5 xl:gap-x-8 xl:space-x-0 xl:px-0">
+              {categoriesToShow?.map(category => (
                 <Link
                   key={category.name}
                   to={`/products-filters?category=${category.name}`}
-                  className="relative flex h-80 w-56 flex-col overflow-hidden rounded-lg p-6 hover:opacity-75 xl:w-auto">
+                  className="relative flex flex-col w-56 p-6 overflow-hidden transition-transform duration-300 rounded-lg shadow-md h-80 hover:shadow-lg hover:scale-105 xl:w-auto"
+                >
+                  {/* Background Image */}
                   <span aria-hidden="true" className="absolute inset-0">
                     <img
-                      src={category.image}
-                      alt=""
-                      className="h-full w-full object-cover object-center"
+                      src={`http://localhost:8000/storage/${category.image}`}
+                      alt={category.name}
+                      className="object-cover object-center w-full h-full rounded-lg"
                     />
                   </span>
+
+                  {/* Gradient Overlay */}
                   <span
                     aria-hidden="true"
-                    className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-gray-800 opacity-50"
+                    className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-gray-900 to-transparent opacity-70"
                   />
-                  <span className="relative mt-auto text-center text-xl font-bold text-white">
-                    {category.name} ({category.products.length})
+
+                  {/* Category Name */}
+                  <span className="relative mt-auto text-xl font-semibold text-center text-white">
+                    {category.name}
+                  </span>
+
+                  {/* Product Count */}
+                  <span className="relative text-sm font-medium text-center text-gray-300">
+                    Products: {category.product_count}
                   </span>
                 </Link>
               ))}
